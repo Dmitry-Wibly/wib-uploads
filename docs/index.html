@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>wib uploads</title>
+<meta name="description" content="Находит рекламные интеграции в роликах YouTube и сохраняет их в mp4. Скачивает видео из соцсетей и посты Telegram. Работает локально на Mac.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<style>
+  :root{--violet:#6b00bd;--violet-2:#551891;--pink:#b900b8;--tint:#faf3ff;--panel-2:#f6effc;--line:#eadcf6;
+    --text:#1d1330;--dim:#6f6585;--shadow:0 10px 30px rgba(85,24,145,.10),0 2px 6px rgba(85,24,145,.06)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--tint:#150d22;--panel-2:#1f1432;--line:#33214d;--text:#f1eaf9;--dim:#a99bc0;--violet:#b377ff;--violet-2:#d1b0ff}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--tint);color:var(--text);font:16px/1.6 Montserrat,-apple-system,"Segoe UI",sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:0 16px}
+  .hero{padding:72px 0 40px;text-align:center}
+  h1{font-size:clamp(30px,5vw,48px);line-height:1.15;margin:0 0 16px;font-weight:800}
+  h1 span{background:linear-gradient(115deg,var(--violet),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{max-width:640px;margin:0 auto 28px;color:var(--dim);font-size:17px}
+  .btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-block;padding:13px 26px;border-radius:30px;font-weight:700;font-size:14px;text-decoration:none;border:1.5px solid var(--violet);color:var(--violet)}
+  .btn.main{background:linear-gradient(115deg,var(--violet),var(--pink));border-color:transparent;color:#fff;text-transform:uppercase;letter-spacing:.04em}
+  .shot{margin:40px auto 0;max-width:800px}
+  .shot img{width:100%;height:auto;border-radius:18px;box-shadow:var(--shadow);display:block}
+  h2{font-size:26px;margin:56px 0 20px;font-weight:800}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+  .card{background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+  .card h3{margin:10px 0 6px;font-size:16px}
+  .card p{margin:0;color:var(--dim);font-size:14px}
+  .ico{display:flex;gap:-4px;height:26px}
+  .ico img{width:26px;height:26px;border-radius:7px;margin-right:4px}
+  ol{padding-left:22px;display:grid;gap:10px}
+  li{min-width:0}
+  pre{max-width:100%;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow:auto;font:13px/1.6 ui-monospace,monospace;margin:10px 0 0}
+  ul{padding-left:20px;display:grid;gap:8px;color:var(--dim)}
+  ul b{color:var(--text)}
+  a{color:var(--violet)}
+  footer{margin:64px 0 40px;padding-top:20px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}
+  footer p{margin:6px 0}
+  .legal{font-style:italic;font-size:12px;opacity:.85}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>Рекламные интеграции из роликов <span>одной кнопкой</span></h1>
+    <p class="lead">wib uploads находит рекламу в видео на YouTube и сохраняет нужные куски в mp4. Ещё умеет скачивать видео из соцсетей, сохранять посты Telegram картинками и искать выпуски блогеров с нужным брендом. Всё работает на твоём компьютере.</p>
+    <div class="btns">
+      <a class="btn main" href="https://github.com/Dmitry-Wibly/wib-uploads/archive/refs/heads/main.zip">Скачать</a>
+      <a class="btn" href="https://github.com/Dmitry-Wibly/wib-uploads">Код на GitHub</a>
+    </div>
+    <div class="shot"><img src="screenshot.png" alt="Главный экран wib uploads с четырьмя режимами"></div>
+  </section>
+
+  <h2>Четыре режима</h2>
+  <div class="cards">
+    <div class="card"><div class="ico"><img src="icons/youtube.png" alt=""></div><h3>Найти рекламу</h3>
+      <p>Читает описание и субтитры, показывает рекламные куски с таймкодами. Ты отмечаешь нужные, а сервис режет их в mp4.</p></div>
+    <div class="card"><div class="ico"><img src="icons/vk.png" alt=""><img src="icons/tiktok.png" alt=""><img src="icons/instagram.png" alt=""><img src="icons/rutube.png" alt=""></div><h3>Выгрузить рекламу</h3>
+      <p>Скачивает видео из VK, TikTok, Instagram* и Rutube целиком, горизонтальные и вертикальные, в папку с именем блогера.</p></div>
+    <div class="card"><div class="ico"><img src="icons/telegram.png" alt=""></div><h3>Выгрузить посты</h3>
+      <p>Сохраняет пост Telegram картинкой JPG. Если пост удалили, ищет его копию в веб-архиве.</p></div>
+    <div class="card"><div class="ico"><img src="icons/youtube.png" alt=""></div><h3>Поиск интеграций</h3>
+      <p>Вписываешь блогеров и бренды, получаешь ссылки на выпуски и объяснение, почему они подошли: ссылка, промокод, erid.</p></div>
+  </div>
+
+  <h2>Как начать</h2>
+  <ol>
+    <li>Нужен Mac. Установи <a href="https://brew.sh/ru/">Homebrew</a>, если его ещё нет.
+      <pre>brew install yt-dlp ffmpeg</pre></li>
+    <li>Скачай проект и запусти его.
+      <pre>git clone https://github.com/Dmitry-Wibly/wib-uploads.git ~/Desktop/ytads
+cd ~/Desktop/ytads &amp;&amp; ./autostart</pre></li>
+    <li>Открой <a href="http://wibuploads.localhost:8788">wibuploads.localhost:8788</a>. Эта страница работает только на твоём компьютере, пока сервис запущен.</li>
+  </ol>
+
+  <h2>Что полезно знать</h2>
+  <ul>
+    <li><b>Всё остаётся у тебя.</b> Куки, ключи и скачанные файлы хранятся только на твоём компьютере.</li>
+    <li><b>Если YouTube просит войти,</b> добавь куки во вкладке «Куки». Там есть пошаговая инструкция.</li>
+    <li><b>VPN.</b> Если он включён для всего компьютера, прокси не нужен. Если VPN работает как прокси, впиши его адрес в настройках.</li>
+    <li><b>Нейросеть по желанию.</b> С Claude Code реклама находится точнее. Без него сервис ищет по описанию и словам.</li>
+  </ul>
+
+  <footer>
+    <p>Открытый проект под лицензией <a href="https://github.com/Dmitry-Wibly/wib-uploads/blob/main/LICENSE">MIT</a>. Пользуйся только с теми материалами, которые имеешь право сохранять.</p>
+    <p class="legal">* Instagram принадлежит компании Meta, которая признана экстремистской организацией и запрещена на территории России.</p>
+  </footer>
+</div>
+</body>
+</html>
