@@ -1,0 +1,60 @@
+#!/bin/sh
+# ставит ytads в автозапуск при входе в систему и перезапускает сервер
+# ./autostart       - включить (повторный запуск подхватывает новый код)
+# ./autostart off   - выключить
+set -e
+DIR="$(cd "$(dirname "$0")" && pwd)"
+LABEL=local.wibuploads.ytads
+OLD_LABEL=pro.6sense.ytads
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+DOMAIN="gui/$(id -u)"
+
+# прежнее имя задачи из ранних версий: убираем, иначе оно держало бы порт
+launchctl bootout "$DOMAIN/$OLD_LABEL" 2>/dev/null || true
+rm -f "$HOME/Library/LaunchAgents/$OLD_LABEL.plist"
+launchctl bootout "$DOMAIN/$LABEL" 2>/dev/null || true
+# сервер, запущенный руками, держит порт 8788
+pkill -f "$DIR/server.py" 2>/dev/null || true
+
+if [ "$1" = "off" ]; then
+  rm -f "$PLIST"
+  echo "автозапуск ytads выключен"
+  exit 0
+fi
+
+mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
+cat > "$PLIST" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$(command -v python3)</string>
+    <string>$DIR/server.py</string>
+    <string>--no-browser</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict><key>PATH</key><string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string></dict>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>$HOME/Library/Logs/ytads.log</string>
+  <key>StandardErrorPath</key><string>$HOME/Library/Logs/ytads.log</string>
+</dict>
+</plist>
+PLIST
+sleep 1
+launchctl bootstrap "$DOMAIN" "$PLIST"
+# первый старт после входа бывает медленным
+i=0
+until curl -s -o /dev/null --max-time 2 http://127.0.0.1:8788/api/env || [ $i -ge 20 ]; do
+  i=$((i + 1)); sleep 1
+done
+if curl -s -o /dev/null --max-time 3 http://127.0.0.1:8788/api/env; then
+  echo "ytads работает и будет стартовать сам при входе в систему"
+  echo "страница: http://wibuploads.localhost:8788"
+else
+  echo "сервер не ответил, смотри лог: $HOME/Library/Logs/ytads.log"
+  exit 1
+fi

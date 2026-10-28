@@ -1,0 +1,18 @@
+# сессия YouTube - в репозиторий не попадает никогда
+cookies.txt
+*cookies*.txt
+*.crx
+
+# результаты работы и мусор
+*.mp4
+*.part
+*.ytdl
+ads.csv
+.source/
+.work/
+.DS_Store
+__pycache__/
+*.pyc
+
+# ключи API - только локально
+.secrets/
