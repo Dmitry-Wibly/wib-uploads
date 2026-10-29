@@ -25,7 +25,7 @@
   .btn{display:inline-block;padding:13px 26px;border-radius:30px;font-weight:700;font-size:14px;text-decoration:none;border:1.5px solid var(--violet);color:var(--violet)}
   .btn.main{background:linear-gradient(115deg,var(--violet),var(--pink));border:0;padding:14.5px 27.5px;color:#fff;text-transform:uppercase;letter-spacing:.04em}
   .shot{margin:40px auto 0;max-width:800px}
-  .shot img{width:100%;height:auto;border-radius:18px;border:1px solid var(--line);display:block}
+  .shot img{width:100%;height:auto;border-radius:18px;box-shadow:0 0 0 1px var(--line);display:block}
   h2{font-size:26px;margin:56px 0 20px;font-weight:800}
   .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
   .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
@@ -52,7 +52,7 @@
     <div class="btns">
       <a class="btn main" href="https://github.com/Dmitry-Wibly/wib-uploads/archive/refs/heads/main.zip">Скачать</a>
     </div>
-    <div class="shot"><img src="screenshot.png" alt="Главный экран wib uploads с четырьмя режимами"></div>
+    <div class="shot"><img src="screenshot.png" srcset="screenshot.png 2x, screenshot@3x.png 3x" width="800" height="272" alt="Главный экран wibuploads с четырьмя режимами"></div>
   </section>
 
   <h2>Четыре режима</h2>
