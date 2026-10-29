@@ -64,12 +64,32 @@
   label.chk{min-height:26px;line-height:1.3}
   label.chk input{margin:0;flex:none}
   .field small{font-weight:400;color:var(--dim);font-size:11.5px;line-height:1.4}
-  .field.wide{grid-column:span 2}
+  .field.wide{grid-column:1/-1}
   #cookieFileRow,.grp .fields+.field{margin-top:14px}
   .status{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:11.5px;color:var(--dim)}
   .status span:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:6px;vertical-align:1px}
   .status span.off:before{background:#cbbfdc}
   .date{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim);white-space:nowrap}
+  .st-title{font-size:15px;font-weight:700;margin:0 0 6px}
+  .step2{display:grid;grid-template-columns:12px 1fr;gap:12px;padding:14px 0}
+  .step2+.step2{border-top:1px solid var(--line)}
+  .sdot{width:10px;height:10px;border-radius:50%;margin-top:6px;background:#cbbfdc}
+  .sdot.ok{background:var(--ok)} .sdot.warn{background:#e8a317} .sdot.bad{background:var(--err)}
+  .stitle{font-weight:700;font-size:13.5px}
+  .stitle .tag{margin-left:8px;font-weight:600}
+  .sdesc{font-size:12.5px;color:var(--dim);margin-top:3px}
+  .sdesc b{color:var(--text)}
+  .inl{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap;align-items:center}
+  .inl input{flex:1;min-width:200px;font-size:13.5px}
+  .cmd{display:flex;gap:8px;align-items:center;margin:8px 0 4px}
+  .cmd code{flex:1;padding:9px 12px;border-radius:10px;font-size:12.5px}
+  .sres{font-size:12.5px;margin-left:4px}
+  .sres.ok{color:var(--ok)} .sres.bad{color:var(--err)}
+  .step2 details{margin-top:8px}
+  .step2 details ol,.step2 details ul{margin:8px 0 0;padding-left:20px;font-size:12.5px;color:var(--dim);display:grid;gap:4px}
+  .helper{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+  .helper textarea{font-size:12.5px;margin:8px 0;color:var(--dim)}
+  .tab.alert:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--err)}
   .legal{text-align:center;font-size:11px;font-style:italic;color:#a59db5;margin:40px 0 0}
   @media (max-width:640px){.modes{display:grid;grid-template-columns:1fr 1fr;border-radius:18px;gap:2px}
     .mode{border-radius:14px;padding:9px 6px;font-size:12px;white-space:normal;text-align:left;gap:6px}
@@ -108,7 +128,7 @@
   .sub{color:var(--dim);font-size:13px;margin:0 0 20px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  input[type=text],input[type=date],select,textarea{background:#fff;border:1.5px solid var(--line-2);
+  input[type=text],input[type=password],input[type=date],select,textarea{background:#fff;border:1.5px solid var(--line-2);
     color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;outline:none;transition:.15s}
   input:focus,select:focus,textarea:focus{border-color:var(--violet);box-shadow:0 0 0 4px rgba(107,0,189,.12)}
   textarea{width:100%;resize:vertical}
@@ -207,8 +227,20 @@
     </div>
 
     <div class="tabs">
+      <button class="tab" data-for="startPanel">Старт</button>
       <button class="tab" data-for="setsPanel">Настройки</button>
       <button class="tab" data-for="ckBox">Куки<span id="ckState"></span></button>
+    </div>
+    <div id="startPanel" class="panel card hide">
+      <h3 class="st-title">Проверка перед стартом</h3>
+      <p class="hint" style="margin:0">Здесь видно, что уже работает, а что осталось настроить. Зелёное трогать не нужно. Жёлтое можно пропустить, но часть функций тогда не заработает.</p>
+      <div id="startList"></div>
+      <div class="row" style="margin-top:14px"><button id="startRecheck" class="small">Проверить всё заново</button></div>
+      <details class="helper"><summary>Не получается? Попроси ChatGPT помочь</summary>
+        <p class="hint" style="margin:8px 0 0">Скопируй текст, вставь его в ChatGPT и отвечай на вопросы. Он проведёт по шагам. Ключи и пароли ему отправлять не нужно.</p>
+        <textarea id="gptPrompt" rows="7" readonly></textarea>
+        <button id="gptCopy" class="small">Скопировать текст</button>
+      </details>
     </div>
     <div id="setsPanel" class="panel card hide">
       <section class="grp">
@@ -248,6 +280,15 @@
       <section class="grp yt-only">
         <h3>Как искать рекламу</h3>
         <div class="fields">
+          <label class="field">Нейросеть
+            <select id="ai">
+              <option value="auto">Любая подключённая</option>
+              <option value="claude">Claude</option>
+              <option value="openai">ChatGPT</option>
+              <option value="off">Не использовать</option>
+            </select>
+            <small>Читает описание и субтитры и ставит границы рекламы. Подключить её можно во вкладке «Старт»</small>
+          </label>
           <label class="field wide">Свои подсказки
             <input id="keywords" type="text" placeholder="вкусвилл, тинькофф, курсы">
             <small>Слова, по которым кусок ролика тоже считать рекламой. Через запятую</small>
@@ -389,12 +430,12 @@ $("#cookies").onchange = () => {
   fileRow();
   store();
 };
-["#cookieFile","#proxy","#keywords","#quality","#transcript"].forEach(id => $(id).onchange = store);
+["#cookieFile","#proxy","#keywords","#quality","#transcript","#ai"].forEach(id => $(id).onchange = store);
 function store(){
   try{
     localStorage.setItem("ytads:cfg", JSON.stringify({
       c:$("#cookies").value, f:$("#cookieFile").value, p:$("#proxy").value,
-      k:$("#keywords").value, q:$("#quality").value, t:$("#transcript").value,
+      k:$("#keywords").value, q:$("#quality").value, t:$("#transcript").value, a:$("#ai").value,
       sb:[...$("#sbCats").querySelectorAll("input:checked")].map(i=>i.value)
     }));
   }catch(e){}
@@ -408,6 +449,7 @@ function restore(){
   if(c.k){ $("#keywords").value = c.k; }
   if(c.q){ $("#quality").value = c.q; }
   if(c.t){ $("#transcript").value = c.t; }
+  if(c.a){ $("#ai").value = c.a; }
   fileRow();
   return c.sb;
 }
@@ -433,6 +475,7 @@ api("/api/env").then(d=>{
   fileRow();
   $("#ckState").textContent = d.cookieFile ? "" : " · не добавлены";
   renderStatus();
+  loadStart(!startLoaded); startLoaded = true;
 }).catch(()=>{ restore(); if(!LOCAL) $("#offline").classList.remove("hide"); });
 }
 function renderStatus(){
@@ -446,7 +489,7 @@ function renderStatus(){
   $("#pxHint").textContent = yt ? "Если YouTube открывается только через VPN. Подставляется сам"
                                 : "Если сайт открывается только через VPN. Для VK и Rutube не используется";
   const st = [yt && 
-    [d.claude, d.claude ? "Рекламу размечает Claude" : "Claude не найден, ищу рекламу по словам, точность ниже"],
+    [d.ai, d.ai ? "Рекламу размечает " + (d.ai === "claude" ? "Claude" : "ChatGPT") : "Нейросеть не подключена, ищу рекламу по словам, точность ниже"],
     [d.cookieFile, d.cookieFile ? "Куки добавлены" : "Куки не добавлены"],
     [d.pot, d.pot ? "Защита от блокировок YouTube включена" : "Защита от блокировок YouTube не установлена"],
     [d.proxy, d.proxy ? "Прокси " + d.proxy : "Без прокси"],
@@ -454,8 +497,118 @@ function renderStatus(){
   ].filter(Boolean);
   $("#envState").innerHTML = st.map(([ok, t]) => `<span class="${ok?"":"off"}">${esc(t)}</span>`).join("");
 }
+let startLoaded = false;
 boot();
 $("#retry").onclick = () => { serverReady = findServer(); boot(); };
+
+/* ---------- старт: проверка, что готово ---------- */
+const GPT_PROMPT = `Помоги мне установить программу wib uploads на мой Mac. Описание и шаги здесь: https://github.com/Dmitry-Wibly/wib-uploads (прочитай README). Если не можешь открыть ссылку, попроси меня вставить текст README.
+
+Веди меня по одному шагу и жди ответа, прежде чем давать следующий. Говори простыми словами. Сначала спроси, какая у меня версия macOS, есть ли Homebrew и как работает мой VPN: приложение на весь компьютер, прокси или расширение браузера. Если пришлю текст ошибки, объясни причину и скажи, что делать.
+
+Не проси у меня пароли и ключи в чате. Ключи я вставляю только на странице программы.`;
+$("#gptPrompt").value = GPT_PROMPT;
+$("#gptCopy").onclick = () => navigator.clipboard.writeText(GPT_PROMPT).then(() => { $("#gptCopy").textContent = "Скопировано"; setTimeout(() => $("#gptCopy").textContent = "Скопировать текст", 2000); });
+
+const stepHTML = (id, st, title, desc, extra = "") =>
+  `<div class="step2" id="st-${id}"><span class="sdot ${st}"></span><div><div class="stitle">${title}</div><div class="sdesc">${desc}</div>${extra}</div></div>`;
+const keyForm = (id, ph) => `<div class="inl"><input type="password" id="k-${id}" placeholder="${ph}" autocomplete="off" spellcheck="false">
+  <button class="small" id="ks-${id}">Сохранить</button><span class="sres" id="km-${id}"></span></div>`;
+
+async function loadStart(auto){
+  let d;
+  try{ d = await api("/api/doctor"); }catch(e){ return; }
+  const rows = [];
+  const miss = d.missing || [];
+  rows.push(miss.length
+    ? stepHTML("tools", "bad", "Программы для скачивания", `Не нашёл ${miss.join(" и ")}. Без них ничего не скачается.`,
+        `<div class="sdesc">Закрой браузер, найди в папке проекта файл «Установить.command» и дважды кликни по нему. Он поставит всё сам.</div>
+         <div class="cmd"><code>brew install yt-dlp ffmpeg</code><button class="small" data-copy="brew install yt-dlp ffmpeg">Скопировать</button></div>
+         <div class="sdesc">Или вставь эту команду в Терминал.</div>`)
+    : stepHTML("tools", "ok", "Программы для скачивания", `yt-dlp ${esc(d.ytdlp)} и ffmpeg на месте.`));
+  rows.push(stepHTML("net", "", "Связь с YouTube", "Проверю, открывается ли YouTube на этом компьютере.",
+    `<div class="inl"><button class="small" id="netGo">Проверить</button><span class="sres" id="netRes"></span></div>
+     <details><summary>Какой у меня VPN?</summary><ul>
+       <li><b>Приложение на весь компьютер</b> (режим TUN): ничего вписывать не нужно.</li>
+       <li><b>VPN как прокси</b> (v2ray, Clash, Hiddify): впиши адрес вида <code>socks5://127.0.0.1:ПОРТ</code> в «Настройках». Порт смотри в самом приложении.</li>
+       <li><b>Расширение для браузера</b> не подойдёт: на программу оно не действует.</li></ul></details>`));
+  rows.push(stepHTML("dl", "", "Тестовое скачивание", "Возьму один известный ролик на YouTube и проверю, что программа его видит.",
+    `<div class="inl"><button class="small" id="dlGo">Проверить</button><span class="sres" id="dlRes"></span></div>`));
+  const tag = t => `<span class="tag">${t}</span>`;
+  rows.push(d.ai
+    ? stepHTML("ai", "ok", "Нейросеть для поиска рекламы", d.ai === "claude" ? "Подключён Claude. Так реклама находится точнее всего." : "Подключён ChatGPT по твоему ключу.")
+    : stepHTML("ai", "warn", "Нейросеть для поиска рекламы" + tag("рекомендуем"),
+        "Не подключена. Рекламу я всё равно найду по словам из описания и субтитров, но ошибок будет больше.",
+        `<div class="sdesc" style="margin-top:10px"><b>Есть ключ OpenAI?</b> Вставь его сюда.</div>${keyForm("openai", "sk-…")}
+         <div class="sdesc">Ключ создаётся на <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. Подписка ChatGPT Plus для этого не подходит: нужен отдельный ключ и пополненный баланс. Платишь только за обработанные ролики.</div>
+         <div class="sdesc" style="margin-top:8px"><b>Есть Claude Code?</b> Установи его по <a href="https://claude.ai/code" target="_blank" rel="noopener">инструкции</a> и нажми «Проверить всё заново».</div>`));
+  rows.push(d.cookies
+    ? stepHTML("ck", "ok", "Куки", "Куки добавлены.")
+    : stepHTML("ck", "warn", "Куки", "Пока нет. Они понадобятся, если YouTube попросит доказать, что ты не бот.",
+        `<div class="inl"><button class="small" id="ckGo">Как добавить</button></div>`));
+  rows.push(d.ytKey
+    ? stepHTML("yk", "ok", "Ключ YouTube API" + tag("для поиска интеграций"), "Ключ добавлен.")
+    : stepHTML("yk", "warn", "Ключ YouTube API" + tag("для поиска интеграций"),
+        "Нужен только для режима «Поиск интеграций». Всё остальное работает без него. Бесплатного лимита хватает на сотни проверок канала в день.",
+        `${keyForm("youtube", "AIza…")}
+         <details><summary>Как получить ключ</summary><ol>
+           <li>Открой <a href="https://console.cloud.google.com" target="_blank" rel="noopener">console.cloud.google.com</a> и создай проект.</li>
+           <li>Найди в поиске «YouTube Data API v3» и нажми «Включить».</li>
+           <li>Открой «Учётные данные», нажми «Создать учётные данные» и выбери «Ключ API».</li>
+           <li>Скопируй ключ и вставь его сюда.</li>
+           <li>В настройках ключа ограничь его одним API, YouTube Data API v3.</li></ol></details>`));
+  rows.push(d.telegram
+    ? stepHTML("tg", "ok", "Сохранение постов Telegram", "Нужная программа найдена.")
+    : stepHTML("tg", "warn", "Сохранение постов Telegram", "Нужно только для режима «Выгрузить посты». Запусти «Установить.command» ещё раз и ответь «да» на вопрос про Telegram. Или выполни в Терминале:",
+        `<div class="cmd"><code>pip3 install playwright &amp;&amp; python3 -m playwright install chromium</code><button class="small" data-copy="pip3 install playwright && python3 -m playwright install chromium">Скопировать</button></div>`));
+  $("#startList").innerHTML = rows.join("");
+  document.querySelector('.tab[data-for="startPanel"]').classList.toggle("alert", miss.length > 0);
+
+  document.querySelectorAll("#startList [data-copy]").forEach(b => b.onclick = () =>
+    navigator.clipboard.writeText(b.dataset.copy).then(() => { b.textContent = "Скопировано"; }));
+  const res = (id, ok, text) => { const e = $("#" + id); e.className = "sres " + (ok ? "ok" : "bad"); e.textContent = text; };
+  const dot = (id, st) => { const e = document.querySelector(`#st-${id} .sdot`); if(e) e.className = "sdot " + st; };
+  if($("#netGo")) $("#netGo").onclick = async () => {
+    $("#netGo").disabled = true; res("netRes", true, "Проверяю…");
+    try{
+      const r = await api("/api/netcheck", {proxy: $("#proxy").value.trim()});
+      if(r.direct.ok){ res("netRes", true, `YouTube открывается за ${r.direct.ms} мс. Прокси не нужен.`); dot("net", "ok"); }
+      else if(r.proxy && r.proxy.ok){ res("netRes", true, "Напрямую закрыт, но через твой прокси открывается. Всё в порядке."); dot("net", "ok"); }
+      else { res("netRes", false, "YouTube не открывается. Включи VPN для всего компьютера или впиши адрес прокси в «Настройках»."); dot("net", "bad"); }
+    }catch(e){ res("netRes", false, e.message || e); }
+    $("#netGo").disabled = false;
+  };
+  if($("#dlGo")) $("#dlGo").onclick = async () => {
+    $("#dlGo").disabled = true; res("dlRes", true, "Проверяю…");
+    try{
+      const r = await api("/api/test", Object.assign(access(), {}));
+      res("dlRes", true, `Работает: «${r.title}», ${hms(r.seconds)}.`); dot("dl", "ok");
+    }catch(e){ res("dlRes", false, e.message || e); dot("dl", "bad"); }
+    $("#dlGo").disabled = false;
+  };
+  if($("#ckGo")) $("#ckGo").onclick = () => openPanel("ckBox", true);
+  [["openai", "ai"], ["youtube", "yk"]].forEach(([name, st]) => {
+    const go = $("#ks-" + name);
+    if(!go) return;
+    go.onclick = async () => {
+      const key = $("#k-" + name).value.trim();
+      if(!key) return;
+      go.disabled = true; res("km-" + name, true, "Проверяю ключ…");
+      try{
+        await api("/api/secret", {name, key, proxy: $("#proxy").value.trim()});
+        $("#k-" + name).value = "";
+        loadStart();
+      }catch(e){ res("km-" + name, false, e.message || e); go.disabled = false; }
+    };
+  });
+  // при первом запуске, или если нет программ, открываем проверку сами
+  let seen = false; try{ seen = !!localStorage.getItem("ytads:started"); }catch(e){}
+  if(auto && (miss.length || !seen)){
+    openPanel("startPanel", true);
+    try{ localStorage.setItem("ytads:started", "1"); }catch(e){}
+  }
+}
+$("#startRecheck").onclick = () => loadStart();
 
 /* ---------- куки ---------- */
 $("#ckSave").onclick = () => {
@@ -501,9 +654,10 @@ function setMode(m){
   document.querySelectorAll(".find-only").forEach(e => e.classList.toggle("hide", appMode !== "find"));
   $("#folder").placeholder = MODES[appMode].folder || "";
   // настройки и куки нужны только там, где скачиваем видео
-  $(".tabs").classList.toggle("hide", appMode === "tg" || appMode === "find");
+  document.querySelectorAll('.tab[data-for="setsPanel"],.tab[data-for="ckBox"]')
+    .forEach(t => t.classList.toggle("hide", appMode === "tg" || appMode === "find"));
   document.querySelectorAll(".yt-only").forEach(e => e.classList.toggle("hide", appMode !== "yt"));
-  if(appMode === "tg" || appMode === "find") openPanel(null);
+  if((appMode === "tg" || appMode === "find") && ["setsPanel","ckBox"].some(id => !$("#"+id).classList.contains("hide"))) openPanel(null);
   renderStatus();
   grow();
   $("#videos").classList.toggle("hide", appMode !== "yt");
@@ -569,7 +723,7 @@ $("#scan").onclick = () => {
   videos = []; $("#videos").innerHTML = ""; $("#results").innerHTML = "";
   $("#foot").classList.add("hide");
   startJob("scan", "/api/scan", Object.assign(access(), {
-    urls, keywords: $("#keywords").value, transcript: $("#transcript").value,
+    urls, keywords: $("#keywords").value, transcript: $("#transcript").value, ai: $("#ai").value,
     sbCats: [...$("#sbCats").querySelectorAll("input:checked")].map(i=>i.value)
   }), `Читаю ${urls.length} ${urls.length===1?"ролик":"ролика"}`);
 };

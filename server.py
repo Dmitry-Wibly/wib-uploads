@@ -36,13 +36,15 @@ PROXY_PORTS = [10808, 10809, 1080, 1086, 2080, 7890, 8889, 9150]
 
 
 def tool(name):
-    p = shutil.which(name)
-    if not p:
-        sys.exit(f"Не найден {name}. Установи: brew install {name}")
-    return p
+    """путь к программе. Если её нет, страница подскажет, как поставить: сервер всё равно запускается."""
+    return shutil.which(name) or next((str(Path(d) / name) for d in ("/opt/homebrew/bin", "/usr/local/bin")
+                                      if (Path(d) / name).exists()), None)
 
 
 YTDLP, FFMPEG, FFPROBE = tool("yt-dlp"), tool("ffmpeg"), tool("ffprobe")
+MISSING = [n for n, v in (("yt-dlp", YTDLP), ("ffmpeg", FFMPEG), ("ffprobe", FFPROBE)) if not v]
+YTDLP, FFMPEG, FFPROBE = YTDLP or "yt-dlp", FFMPEG or "ffmpeg", FFPROBE or "ffprobe"
+WIB_HOME = Path(os.environ.get("WIB_HOME") or Path.home() / ".wibuploads")
 
 JOBS = {}
 LOCK = threading.Lock()
@@ -120,6 +122,9 @@ def auth_args(req):
 
 def friendly(msg):
     low = msg.lower()
+    if "no such file or directory" in low and re.search(r"yt-dlp|ffmpeg|ffprobe", low):
+        return ("Не нашёл yt-dlp или ffmpeg. Открой вкладку «Старт» и сделай, что там написано, "
+                "или дважды кликни файл «Установить.command» в папке проекта.")
     return msg + BOT_HINT if "not a bot" in low or "sign in to confirm" in low else msg
 
 
@@ -838,6 +843,10 @@ def find_claude():
 
 CLAUDE = find_claude()
 AI_MODEL = os.environ.get("YTADS_MODEL", "sonnet")
+AI_NAMES = {"claude": "Claude", "openai": "ChatGPT"}
+OPENAI_BASE = os.environ.get("YTADS_OPENAI_BASE", "https://api.openai.com/v1")
+OPENAI_PREF = ["gpt-5-mini", "gpt-4.1-mini", "gpt-4o-mini", "gpt-5", "gpt-4.1", "gpt-4o"]
+_openai_model = {}
 AI_PROMPT = """Ниже описание YouTube-ролика и его автосубтитры с метками времени [м:сс]. Найди в ролике \
 все рекламные интеграции: места, где ведущий или вставка рекламирует товар, сервис или бренд. Опирайся \
 на описание: рекламные абзацы со ссылками и промокодами и маркировка «Реклама … erid» показывают, кто \
@@ -851,17 +860,112 @@ AI_PROMPT = """Ниже описание YouTube-ролика и его авто
 [{"start":"м:сс","end":"м:сс","brand":"бренд","evidence":"короткая цитата"}]"""
 
 
-def ai_ads(segs, desc, title=""):
-    """реклама по разметке Claude: [{start, end, brand, why}]. None, если Claude недоступен."""
-    if not CLAUDE or os.environ.get("YTADS_AI") == "off":
+def curl_json(url, headers=None, body=None, proxy="", timeout=60):
+    """запрос через curl: идёт и через SOCKS-прокси, а ключ не виден в списке процессов."""
+    cmd = ["curl", "-sS", "--max-time", str(timeout), "-w", "\n%{http_code}"]
+    if proxy:
+        cmd += ["-x", proxy.replace("socks5://", "socks5h://")]
+    hfile = None
+    if headers:
+        fd, hfile = tempfile.mkstemp(prefix="ytads-h-")
+        os.close(fd)
+        os.chmod(hfile, 0o600)
+        Path(hfile).write_text("\n".join(f"{k}: {v}" for k, v in headers.items()))
+        cmd += ["-H", f"@{hfile}"]
+    if body is not None:
+        cmd += ["-H", "Content-Type: application/json", "--data-binary", "@-"]
+    cmd.append(url)
+    try:
+        r = subprocess.run(cmd, input=json.dumps(body) if body is not None else None, capture_output=True,
+                           text=True, errors="replace", timeout=timeout + 10)
+    finally:
+        if hfile:
+            os.unlink(hfile)
+    if r.returncode != 0:
+        raise RuntimeError(f"нет связи с {urllib.parse.urlsplit(url).hostname}")
+    text, _, code = r.stdout.rpartition("\n")
+    try:
+        data = json.loads(text)
+    except ValueError:
+        data = {"raw": text[:300]}
+    return int(code or 0), data
+
+
+def read_secret(name):
+    f = ROOT / ".secrets" / name
+    return f.read_text().strip() if f.exists() else ""
+
+
+def write_secret(name, value):
+    d = ROOT / ".secrets"
+    d.mkdir(exist_ok=True)
+    os.chmod(d, 0o700)
+    f = d / name
+    f.write_text(value.strip() + "\n")
+    os.chmod(f, 0o600)
+
+
+def openai_key():
+    return os.environ.get("OPENAI_API_KEY", "").strip() or read_secret("openai_api_key.txt")
+
+
+def ai_provider(pref=None):
+    """кто размечает рекламу: claude, openai или None. pref: auto, claude, openai, off."""
+    pref = pref or os.environ.get("YTADS_AI") or "auto"
+    if pref == "off":
+        return None
+    if pref in ("auto", "claude") and CLAUDE:
+        return "claude"
+    if pref in ("auto", "openai") and openai_key():
+        return "openai"
+    return None
+
+
+def pick_openai_model(proxy=""):
+    if os.environ.get("YTADS_OPENAI_MODEL"):
+        return os.environ["YTADS_OPENAI_MODEL"]
+    if "m" not in _openai_model:
+        code, d = curl_json(OPENAI_BASE + "/models", {"Authorization": "Bearer " + openai_key()},
+                            proxy=proxy, timeout=30)
+        ids = {x.get("id") for x in d.get("data", [])} if code == 200 and isinstance(d, dict) else set()
+        _openai_model["m"] = next((m for m in OPENAI_PREF if m in ids), "gpt-4o-mini")
+    return _openai_model["m"]
+
+
+def _ask_openai(text, proxy=""):
+    code, d = curl_json(OPENAI_BASE + "/chat/completions", {"Authorization": "Bearer " + openai_key()},
+                        {"model": pick_openai_model(proxy), "messages": [
+                            {"role": "system", "content": AI_PROMPT}, {"role": "user", "content": text}]},
+                        proxy=proxy, timeout=600)
+    err = d.get("error", {}) if isinstance(d, dict) else {}
+    if code in (401, 403):
+        raise RuntimeError("OpenAI не принял ключ")
+    if code == 429 or err.get("code") == "insufficient_quota":
+        raise RuntimeError("На счёте OpenAI закончились деньги или превышен лимит запросов")
+    if code != 200:
+        raise RuntimeError(f"ChatGPT не ответил: {str(err.get('message') or d)[:200]}")
+    return d["choices"][0]["message"]["content"] or ""
+
+
+def _ask_claude(text):
+    r = subprocess.run([CLAUDE, "-p", AI_PROMPT, "--model", AI_MODEL], input=text,
+                       capture_output=True, text=True, errors="replace", timeout=600)
+    if r.returncode != 0:
+        raise RuntimeError(f"Claude не ответил: {(r.stderr or r.stdout or '').strip()[-200:]}")
+    return r.stdout or ""
+
+
+def ai_ads(segs, desc, title="", provider=None, proxy=""):
+    """реклама по разметке нейросети: [{start, end, brand, why}]. None, если нейросети нет."""
+    provider = provider or ai_provider()
+    if not provider:
         return None
     lines = [f"[{hms(a)}] {t}" for a, _, t in segs]
     text = f"НАЗВАНИЕ: {title}\n\nОПИСАНИЕ:\n{desc or ''}\n\nСУБТИТРЫ:\n" + "\n".join(lines)
-    r = subprocess.run([CLAUDE, "-p", AI_PROMPT, "--model", AI_MODEL], input=text,
-                       capture_output=True, text=True, errors="replace", timeout=600)
-    m = re.search(r"\[.*\]", r.stdout or "", re.S)
-    if r.returncode != 0 or not m:
-        raise RuntimeError(f"Claude не ответил: {(r.stderr or r.stdout or '').strip()[-200:]}")
+    answer = _ask_openai(text, proxy) if provider == "openai" else _ask_claude(text)
+    m = re.search(r"\[.*\]", answer, re.S)
+    if not m:
+        raise RuntimeError(f"{AI_NAMES[provider]} ответил не в том виде: {answer.strip()[:160]}")
     out = []
     for f in json.loads(m.group(0)):
         try:
@@ -874,7 +978,7 @@ def ai_ads(segs, desc, title=""):
     return out
 
 
-def add_ai(cands, found, dur):
+def add_ai(cands, found, dur, src="claude"):
     """реклама от Claude. Где она совпала с SponsorBlock или главой, границы оставляем их,
     а бренд и источник дописываем."""
     for f in found:
@@ -890,12 +994,12 @@ def add_ai(cands, found, dur):
                     c["brand"] = f["brand"]
                     if flat(f["brand"]) not in flat(c["label"]):
                         c["label"] = f"{f['brand']} · {c['label']}" if c["label"] else f["brand"]
-                    if "claude" not in c["src"]:
-                        c["src"].append("claude")
+                    if src not in c["src"]:
+                        c["src"].append(src)
             if any(c["ad"] for c in same):
                 continue
         cands.append({"start": round(f["start"], 2), "end": round(min(f["end"], dur or f["end"]), 2),
-                      "label": f["brand"] or "реклама", "src": ["claude"], "forced": False, "ad": True,
+                      "label": f["brand"] or "реклама", "src": [src], "forced": False, "ad": True,
                       "brand": f["brand"], "evidence": f["why"][0] if f["why"] else ""})
     cands.sort(key=lambda c: c["start"])
     return cands
@@ -1000,20 +1104,23 @@ def scan_one(url, req, args, extra, extra_sb, job, note=""):
     mode = req.get("transcript") or "auto"
     # субтитры нужны, если таймкодов на рекламу нет или в описании есть рекламодатели:
     # тогда по ним видно, какой бренд где, и находятся те, кого нет в таймкодах
-    if mode == "always" or (mode == "auto" and (CLAUDE or ads or not any(c["ad"] for c in cands))):
+    prov = ai_provider((req or {}).get("ai"))
+    if mode == "always" or (mode == "auto" and (prov or ads or not any(c["ad"] for c in cands))):
         jset(job, stage=f"читаю субтитры {note}")
         try:
             segs, subs = subtitle_segments(url, args, info)
             ai = None
             if segs:
-                jset(job, stage=f"Claude размечает рекламу {note}")
+                if prov:
+                    jset(job, stage=f"{AI_NAMES[prov]} размечает рекламу {note}")
                 try:
-                    ai = ai_ads(segs, info.get("description"), info.get("title"))
+                    ai = ai_ads(segs, info.get("description"), info.get("title"), prov,
+                                (req or {}).get("proxy") or "")
                 except Exception as e:  # noqa: BLE001
                     jlog(job, f"{str(e)[:200]}; ищу рекламу по словам описания")
             if ai is not None:
-                cands = add_ai(cands, ai, info.get("duration"))
-                subs = f"{subs}, разметил Claude"
+                cands = add_ai(cands, ai, info.get("duration"), AI_NAMES[prov].lower())
+                subs = f"{subs}, разметил {AI_NAMES[prov]}"
             elif segs:
                 if ads:
                     # реклама из описания: ищем каждого рекламодателя по словам его блока
@@ -1291,10 +1398,12 @@ def social_worker(job, req):
 
 def playwright_python():
     """питон, у которого есть Playwright: снимки постов делает Chromium."""
-    cands = [sys.executable, shutil.which("python3")]
+    cands = [str(WIB_HOME / "venv/bin/python3"), sys.executable, shutil.which("python3")]
     cands += sorted(str(p) for p in Path("/Library/Frameworks/Python.framework/Versions").glob("*/bin/python3"))
     cands += [str(p) for p in Path("/opt/homebrew/bin").glob("python3.*")]
     for c in dict.fromkeys(filter(None, cands)):
+        if not Path(c).exists():
+            continue
         r = subprocess.run([c, "-c", "import playwright"], capture_output=True)
         if r.returncode == 0:
             return c
@@ -1369,7 +1478,7 @@ def telegram_worker(job, req):
 
 # ---------- поиск выпусков с интеграциями по описаниям (YouTube Data API) ----------
 
-KEY_FILE = ROOT / ".secrets" / "youtube_api_key.txt"
+KEY_FILE = ROOT / ".secrets" / "youtube_api_key.txt"  # ключ можно положить вручную или сохранить на странице
 FIND_DIR = Path(os.environ.get("YTADS_FIND_OUT") or Path.home() / "Desktop" / "Поиск интеграций")
 API = "https://www.googleapis.com/youtube/v3/"
 SEP = r"[\s\-‐‑–—.]*"
@@ -1382,27 +1491,25 @@ def api_key():
     return k
 
 
+_tl = threading.local()
+
+
 def yt_api(method, **params):
     """запрос к YouTube Data API; ключ в заголовке, чтобы не светился в адресах."""
     key = api_key()
     if not key:
-        raise RuntimeError(f"Нет ключа YouTube API. Положи его в {KEY_FILE}")
-    req = urllib.request.Request(API + method + "?" + urllib.parse.urlencode(params),
-                                 headers={"X-goog-api-key": key})
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            return json.load(r)
-    except urllib.error.HTTPError as e:
-        try:
-            err = json.load(e).get("error", {})
-        except Exception:  # noqa: BLE001
-            err = {}
-        reason = ((err.get("errors") or [{}])[0]).get("reason", "")
-        if reason in ("quotaExceeded", "dailyLimitExceeded"):
-            raise RuntimeError("Дневной лимит YouTube API исчерпан, он обновится в 10:00 по Москве") from None
-        if e.code in (400, 403) and "key" in (err.get("message") or "").lower():
-            raise RuntimeError("YouTube API не принял ключ: проверь его в " + str(KEY_FILE)) from None
-        raise RuntimeError(f"YouTube API: {err.get('message') or e}") from None
+        raise RuntimeError("Нет ключа YouTube API. Добавь его во вкладке «Старт»")
+    url = API + method + "?" + urllib.parse.urlencode(params)
+    code, d = curl_json(url, {"X-goog-api-key": key}, proxy=getattr(_tl, "proxy", ""), timeout=30)
+    if code == 200:
+        return d
+    err = d.get("error", {}) if isinstance(d, dict) else {}
+    reason = ((err.get("errors") or [{}])[0]).get("reason", "")
+    if reason in ("quotaExceeded", "dailyLimitExceeded"):
+        raise RuntimeError("Дневной лимит YouTube API исчерпан, он обновится в 10:00 по Москве")
+    if code in (400, 403) and "key" in (err.get("message") or "").lower():
+        raise RuntimeError("YouTube API не принял ключ. Проверь его во вкладке «Старт»")
+    raise RuntimeError(f"YouTube API: {err.get('message') or code}")
 
 
 def resolve_channel(q):
@@ -1521,6 +1628,7 @@ def find_worker(job, req):
         raise RuntimeError("Напиши блогеров, каждого с новой строки: имя, @handle или ссылку на канал")
     if not kws_raw:
         raise RuntimeError("Напиши, что искать в описании, через запятую. Например: Т-Банк, Хоккейный вклад")
+    _tl.proxy = (req.get("proxy") or "").strip()
     kws = [(k, keyword_rx(k)) for k in kws_raw]
     since = (req.get("since") or "").strip()[:10]
     limit = int(req.get("limit") or 3000)
@@ -1578,6 +1686,66 @@ def find_worker(job, req):
                 w.writerow([f"{r['blogger']} | {r['title']}", r["url"], ", ".join(r["why"]), r["date"]])
     jset(job, state="done", pct=100.0, stage="готово", results=found, errors=errors, channels=channels,
          keywords=kws_raw, manifest=manifest)
+
+
+def doctor():
+    """что готово и чего не хватает; тексты и подсказки собирает страница."""
+    ver = ""
+    if not any(m == "yt-dlp" for m in MISSING):
+        r = subprocess.run([YTDLP, "--version"], capture_output=True, text=True)
+        ver = (r.stdout or "").strip()
+    return {"missing": MISSING, "ytdlp": ver, "ai": ai_provider() or "", "claude": bool(CLAUDE),
+            "openai": bool(openai_key()), "cookies": bool(detect_cookie_file()),
+            "proxy": detect_proxy(), "ytKey": bool(api_key()),
+            "telegram": bool(playwright_python()), "out": str(OUT_DIR)}
+
+
+def net_probe(proxy=""):
+    """открывается ли YouTube: напрямую и, если задан, через прокси."""
+    def one(px):
+        cmd = ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "--max-time", "8"]
+        if px:
+            cmd += ["-x", px.replace("socks5://", "socks5h://")]
+        t = time.time()
+        r = subprocess.run(cmd + ["https://www.youtube.com/generate_204"], capture_output=True, text=True)
+        return {"ok": (r.stdout or "").strip() in ("204", "200"), "ms": int((time.time() - t) * 1000)}
+    return {"direct": one(""), "proxy": one(proxy) if proxy else None}
+
+
+def save_secret(name, key, proxy=""):
+    """проверяем ключ у сервиса и только потом кладём в .secrets (папка 700, файл 600)."""
+    key = (key or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9_.\-]{20,300}", key):
+        raise ValueError("Это не похоже на ключ. Скопируй его целиком, без пробелов")
+    try:
+        if name == "openai":
+            code, _ = curl_json(OPENAI_BASE + "/models", {"Authorization": "Bearer " + key}, proxy=proxy, timeout=30)
+            if code in (401, 403):
+                raise ValueError("OpenAI не принял этот ключ. Проверь, что скопировал его целиком")
+            if code != 200:
+                raise ValueError(f"OpenAI ответил ошибкой {code}. Попробуй ещё раз позже")
+            fname = "openai_api_key.txt"
+        elif name == "youtube":
+            code, _ = curl_json(API + "channels?part=id&forHandle=@YouTube", {"X-goog-api-key": key},
+                                proxy=proxy, timeout=30)
+            if code != 200:
+                raise ValueError("YouTube не принял ключ. Проверь, что включил «YouTube Data API v3» "
+                                 "и скопировал ключ целиком")
+            fname = "youtube_api_key.txt"
+        else:
+            raise ValueError("Неизвестный ключ")
+    except RuntimeError as e:
+        raise ValueError(f"Не достучался до сервиса ({e}). Если он закрыт, включи VPN для всего компьютера "
+                         "или впиши прокси в «Настройках»") from None
+    write_secret(fname, key)
+    _openai_model.clear()
+    return {"ok": True}
+
+
+def test_download(req):
+    """один известный ролик: проверяем, что yt-dlp, сеть и куки работают вместе."""
+    info = ytdlp_info("https://www.youtube.com/watch?v=dQw4w9WgXcQ", auth_args(req))
+    return {"ok": True, "title": info.get("title"), "seconds": info.get("duration")}
 
 
 def detect_cookie_file():
@@ -1703,7 +1871,7 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(200, (ROOT / "index.html").read_bytes(), "text/html; charset=utf-8")
         if path == "/api/env":
             arc = Path.home() / "Library/Application Support/Arc/User Data/Default"
-            return self._send(200, {"pot": POT_SCRIPT.exists(), "claude": bool(CLAUDE), "out": str(OUT_DIR),
+            return self._send(200, {"pot": POT_SCRIPT.exists(), "claude": bool(CLAUDE), "ai": ai_provider() or "", "out": str(OUT_DIR),
                                     "socialOut": str(SOCIAL_DIR), "ytKey": bool(api_key()),
                                     "proxy": detect_proxy(), "arc": arc.exists(),
                                     "cookieFile": detect_cookie_file(),
@@ -1717,6 +1885,8 @@ class Handler(BaseHTTPRequestHandler):
             if f.suffix.lower() == ".jpg" and TG_DIR.resolve() in f.parents and f.exists():
                 return self._send(200, f.read_bytes(), "image/jpeg")
             return self._send(404, {"error": "нет файла"})
+        if path == "/api/doctor":
+            return self._send(200, doctor())
         if path.startswith("/api/job/"):
             job = JOBS.get(path.rsplit("/", 1)[-1])
             if not job:
@@ -1749,6 +1919,19 @@ class Handler(BaseHTTPRequestHandler):
                   "telegram": telegram_worker, "find": find_worker}[kind]
             threading.Thread(target=_guard(fn), args=(job, req), daemon=True).start()
             return self._send(200, {"job": job["id"]})
+        if path == "/api/netcheck":
+            return self._send(200, net_probe((req.get("proxy") or "").strip()))
+        if path == "/api/test":
+            try:
+                return self._send(200, test_download(req))
+            except Exception as e:  # noqa: BLE001
+                msg = re.sub(r"^ERROR:\s*(\[\w+\]\s*\S+:\s*)?", "", str(e).strip().splitlines()[-1])[:300]
+                return self._send(400, {"error": friendly(msg)})
+        if path == "/api/secret":
+            try:
+                return self._send(200, save_secret(req.get("name"), req.get("key"), (req.get("proxy") or "").strip()))
+            except ValueError as e:
+                return self._send(400, {"error": str(e)})
         if path == "/api/cancel":
             job = JOBS.get(req.get("job"))
             if job:
@@ -1847,6 +2030,8 @@ def main():
     url = f"http://wibuploads.localhost:{port}/"
     print(f"ytads работает: {url}\n       резервный адрес: http://127.0.0.1:{port}/"
           f"\nфрагменты: {OUT_DIR}\nCtrl+C — остановить")
+    if MISSING:
+        print(f"Не нашёл: {', '.join(MISSING)}. Дважды кликни «Установить.command» или выполни: brew install yt-dlp ffmpeg")
     if "--no-browser" not in sys.argv:
         threading.Timer(0.6, lambda: __import__("webbrowser").open(url)).start()
     try:
