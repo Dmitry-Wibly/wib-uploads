@@ -856,8 +856,12 @@ AI_PROMPT = """Ниже описание YouTube-ролика и его авто
 Границы ставь точно: начало — первая фраза рекламы (часто заход вроде «кстати», смена темы или \
 подводка-сценка), конец — последняя фраза рекламы до возвращения к выпуску.
 
+Для каждой рекламы укажи вид: "ролик", если это готовый рекламный ролик рекламодателя (другой голос \
+или диктор, выверенный текст со слоганом, обычно 10-40 секунд), или "блогер", если о продукте рассказывает \
+сам ведущий своими словами. Если в одной рекламе несколько брендов, перечисли их через запятую.
+
 Ответь только JSON-массивом без пояснений:
-[{"start":"м:сс","end":"м:сс","brand":"бренд","evidence":"короткая цитата"}]"""
+[{"start":"м:сс","end":"м:сс","brand":"бренд","kind":"ролик|блогер","evidence":"короткая цитата"}]"""
 
 
 def curl_json(url, headers=None, body=None, proxy="", timeout=60):
@@ -973,7 +977,9 @@ def ai_ads(segs, desc, title="", provider=None, proxy=""):
         except (KeyError, ValueError):
             continue
         if b > a:
+            kind = str(f.get("kind") or "").lower()
             out.append({"start": float(a), "end": float(b), "brand": (f.get("brand") or "").strip(),
+                        "ready": True if "ролик" in kind else False if "блог" in kind else None,
                         "why": [(f.get("evidence") or "").strip()[:160]]})
     return out
 
@@ -992,6 +998,8 @@ def add_ai(cands, found, dur, src="claude"):
                         c["start"], c["end"] = f["start"], f["end"]
                     c["ad"] = True
                     c["brand"] = f["brand"]
+                    if f.get("ready") is not None:
+                        c["ready"] = f["ready"]
                     if flat(f["brand"]) not in flat(c["label"]):
                         c["label"] = f"{f['brand']} · {c['label']}" if c["label"] else f["brand"]
                     if src not in c["src"]:
@@ -1000,8 +1008,33 @@ def add_ai(cands, found, dur, src="claude"):
                 continue
         cands.append({"start": round(f["start"], 2), "end": round(min(f["end"], dur or f["end"]), 2),
                       "label": f["brand"] or "реклама", "src": [src], "forced": False, "ad": True,
-                      "brand": f["brand"], "evidence": f["why"][0] if f["why"] else ""})
+                      "brand": f["brand"], "ready": f.get("ready"),
+                      "evidence": f["why"][0] if f["why"] else ""})
     cands.sort(key=lambda c: c["start"])
+    return cands
+
+
+# готовый ролик рекламодателя обычно короче этого, рассказ блогера длиннее
+READY_MAX = 40
+
+
+def ad_types(cands, dur):
+    """тип рекламы. Преролл (он же альтролл): готовый ролик бренда без слов блогера, где бы ни стоял.
+    Интеграция-1: первый рассказ блогера, Интеграция-2: следующие (мидролл)."""
+    native = 0
+    for c in sorted((c for c in cands if c.get("ad")), key=lambda c: c["start"]):
+        # самореклама канала из SponsorBlock: это не рекламодатель
+        if not c.get("brand") and "самопромо" in (c.get("label") or "").lower():
+            c["type"] = "Самореклама"
+            continue
+        ready = c.get("ready")
+        if ready is None:
+            ready = c["end"] - c["start"] <= READY_MAX
+        if ready:
+            c["type"] = "Преролл"
+        else:
+            native += 1
+            c["type"] = "Интеграция-1" if native == 1 else "Интеграция-2"
     return cands
 
 
@@ -1140,6 +1173,7 @@ def scan_one(url, req, args, extra, extra_sb, job, note=""):
             for f in (flat, lambda b: flat(_canon(b)[0]))}
     shown = lambda a: any(x and (x in flat(a["name"]) or flat(a["name"]) in x
                                  or flat(a.get("legal")) and flat(a.get("legal")) in x) for x in seen)
+    ad_types(cands, info.get("duration"))
     return {
         "id": vid, "url": info.get("webpage_url") or url,
         "title": info.get("title") or vid,
@@ -1164,7 +1198,7 @@ def scan_worker(job, req):
     for i, url in enumerate(urls):
         if job.get("cancelled"):
             break
-        jset(job, pct=i / max(1, len(urls)) * 100, stage=f"читаю {i + 1} из {len(urls)}")
+        jset(job, pct=i / max(1, len(urls)) * 100, stage=f"ролик {i + 1} из {len(urls)}")
         try:
             v = scan_one(url, req, args, extra, extra_sb, job, f"{i + 1} из {len(urls)}")
             videos.append(v)
@@ -1180,10 +1214,10 @@ def scan_worker(job, req):
 def grab_one(item, args, height, job, work):
     """качает только нужный отрезок; если не вышло - целиком и режет ffmpeg."""
     a, b = float(item["start"]), float(item["end"])
-    name = safe_name(f"{tag(a)} - {item.get('title','')} - {item.get('label') or 'фрагмент'}")
-    folder = OUT_DIR / safe_name(item.get("channel") or "без канала")
+    blogger = safe_name(item.get("channel") or "без канала")
+    folder = OUT_DIR / blogger
     folder.mkdir(parents=True, exist_ok=True)
-    out = unique(folder / f"{name}.mp4")
+    out = folder / f"AD{next_num(folder, 'AD'):02d}_{blogger}.mp4"
     fmt = f"bv*[height<=?{height}][ext=mp4]+ba[ext=m4a]/bv*[height<=?{height}]+ba/b[height<=?{height}]/b"
     try:
         run_stream([YTDLP, "--no-playlist", "--newline", "--no-warnings", *args, "-f", fmt,
@@ -1230,7 +1264,7 @@ def probe_duration(path):
 
 
 MANIFEST_HEAD = ["дата", "канал", "ролик", "ссылка", "id", "начало", "конец",
-                 "длина_с", "подпись", "источники", "файл", "бренд"]
+                 "длина_с", "подпись", "источники", "файл", "бренд", "тип"]
 
 
 def write_manifest(rows):
@@ -1239,7 +1273,8 @@ def write_manifest(rows):
         # старый манифест без колонки «бренд»: дописываем её в заголовок
         text = MANIFEST.read_text(encoding="utf-8-sig")
         head, _, rest = text.partition("\n")
-        if head.rstrip("\r").split(";") == MANIFEST_HEAD[:-1]:
+        old = head.rstrip("\r").split(";")
+        if old != MANIFEST_HEAD and old == MANIFEST_HEAD[:len(old)]:
             MANIFEST.write_text(";".join(MANIFEST_HEAD) + "\n" + rest, encoding="utf-8-sig")
     with MANIFEST.open("a", newline="", encoding="utf-8-sig" if new else "utf-8") as f:
         w = csv.writer(f, delimiter=";")
@@ -1264,6 +1299,47 @@ def unique(path):
     return path
 
 
+def next_num(folder, prefix):
+    """следующий номер по порядку: AD01, AD02… Считаем по файлам, что уже лежат в папке."""
+    nums = [int(m.group(1)) for p in folder.glob(f"{prefix}*")
+            if (m := re.match(rf"{prefix}(\d+)_", p.name))]
+    return max(nums, default=0) + 1
+
+
+def grab_preview(item, proxy=""):
+    """обложка ролика в JPG, самая крупная, какая есть у YouTube. Кладём в папку блогера, в «Превью»."""
+    vid = item.get("id") or video_id(item.get("url") or "")
+    if not vid:
+        raise RuntimeError("не понял id ролика")
+    blogger = safe_name(item.get("channel") or "без канала")
+    folder = OUT_DIR / blogger / "Превью"
+    folder.mkdir(parents=True, exist_ok=True)
+    # какой PR у какого ролика: чтобы одну обложку не качать дважды
+    index = folder / ".ids.json"
+    try:
+        ids = json.loads(index.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        ids = {}
+    if ids.get(vid) and (folder / ids[vid]).exists():
+        return folder / ids[vid]
+    out = folder / f"PR{next_num(folder, 'PR'):02d}_{blogger}.jpg"
+    tmp = folder / f".{vid}.part"
+    # картинки отдаются и без прокси; прокси пробуем, только если напрямую не вышло
+    for px in [""] + ([proxy] if proxy else []):
+        for size in ("maxresdefault", "sddefault", "hqdefault"):
+            cmd = ["curl", "-sfL", "--max-time", "30", "-o", str(tmp)]
+            if px:
+                cmd += ["-x", px.replace("socks5://", "socks5h://")]
+            r = subprocess.run(cmd + [f"https://i.ytimg.com/vi/{vid}/{size}.jpg"], capture_output=True)
+            if r.returncode == 0 and tmp.exists() and tmp.stat().st_size > 2000:
+                tmp.replace(out)
+                ids[vid] = out.name
+                index.write_text(json.dumps(ids, ensure_ascii=False, indent=1), encoding="utf-8")
+                return out
+    tmp.unlink(missing_ok=True)
+    raise RuntimeError("превью не скачалось")
+
+
 def grab_worker(job, req):
     items = req.get("items") or []
     args = auth_args(req)
@@ -1279,7 +1355,7 @@ def grab_worker(job, req):
             try:
                 path = grab_one(item, args, height, job, work)
                 got = probe_duration(path)
-                done.append({"file": str(path), "ok": True, "seconds": round(got, 2),
+                done.append({"file": str(path), "ok": True, "seconds": round(got, 2), "type": item.get("type"),
                              "label": item.get("label"), "title": item.get("title"),
                              "start": item["start"], "end": item["end"]})
                 rows.append([datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -1288,14 +1364,30 @@ def grab_worker(job, req):
                              round(float(item["end"]) - float(item["start"]), 1),
                              item.get("label", ""), ",".join(item.get("src") or []),
                              str(path.relative_to(OUT_DIR)) if OUT_DIR in path.parents else str(path),
-                             item.get("brand", "")])
+                             item.get("brand", ""), item.get("type", "")])
             except Exception as e:  # noqa: BLE001
                 done.append({"ok": False, "error": friendly(str(e)), "label": item.get("label"),
                              "title": item.get("title"), "start": item["start"], "end": item["end"]})
                 jlog(job, f"не вышло: {e}")
         if rows:
             write_manifest(rows)
-        jset(job, state="done", pct=100.0, stage="готово", results=done,
+        previews = []
+        if req.get("previews") and not job.get("cancelled"):
+            jset(job, stage="качаю превью", sub=None)
+            seen = set()
+            for item in items:
+                key = item.get("id") or item.get("url")
+                if key in seen:
+                    continue
+                seen.add(key)
+                try:
+                    path = grab_preview(item, req.get("proxy") or "")
+                    previews.append({"ok": True, "file": str(path), "title": item.get("title")})
+                    jlog(job, f"превью: {path.name}")
+                except Exception as e:  # noqa: BLE001
+                    previews.append({"ok": False, "error": str(e), "title": item.get("title")})
+                    jlog(job, f"превью не вышло: {e}")
+        jset(job, state="done", pct=100.0, stage="готово", results=done, previews=previews,
              manifest=str(MANIFEST) if rows else "")
     except Exception as e:  # noqa: BLE001
         jset(job, state="error", stage="ошибка", error=friendly(str(e)), results=done)
@@ -1948,7 +2040,9 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/reveal":
             p = Path(req.get("path") or "")
             if p.exists():
-                subprocess.run(["open", "-R", str(p)], check=False)
+                # папку можно открыть целиком, файл показываем выделенным в его папке
+                subprocess.run(["open", str(p)] if req.get("open") and p.is_dir() else ["open", "-R", str(p)],
+                               check=False)
                 return self._send(200, {"ok": True})
             return self._send(404, {"error": "файл не найден"})
         return self._send(404, {"error": "not found"})

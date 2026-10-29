@@ -12,12 +12,12 @@
 <style>
   :root{
     --violet:#6b00bd; --violet-2:#551891; --magenta:#a910b6; --pink:#b900b8;
-    --bg:#ffffff; --tint:#faf3ff; --panel:#ffffff; --panel-2:#f6effc; --line:#eadcf6; --line-2:#d9c3ef;
-    --text:#1d1330; --dim:#6f6585; --accent:var(--violet); --ad:#a910b6; --ok:#18a874; --err:#e0245e;
-    --shadow:0 10px 30px rgba(85,24,145,.10), 0 2px 6px rgba(85,24,145,.06);
+    --bg:#ffffff; --tint:#ffffff; --panel:#ffffff; --panel-2:#f5f3f8; --line:#eeecf1; --line-2:#e1dde8;
+    --text:#141118; --dim:#8a8593; --accent:var(--violet); --ad:#a910b6; --ok:#18a874; --err:#e0245e;
+    --shadow:none;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--tint);color:var(--text);
+  body{margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
     font:15px/1.55 Montserrat,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 
   .wrap{max-width:1112px;margin:0 auto;padding:28px 16px 120px;position:relative}
@@ -25,9 +25,9 @@
   body.home .wrap{padding-top:max(80px,30vh)}
   .searchbox{max-width:760px;margin:0 auto 18px;transition:.25s}
   body:not(.home) .searchbox{max-width:none}
-  .search{display:flex;align-items:flex-start;gap:8px;background:#fff;border-radius:18px;padding:8px 8px 8px 18px;
-    border:2px solid transparent;background:linear-gradient(#fff,#fff) padding-box,
-    linear-gradient(115deg,var(--violet),var(--pink)) border-box;box-shadow:0 14px 40px rgba(107,0,189,.14)}
+  .search{display:flex;align-items:flex-start;gap:8px;background:#fff;border-radius:16px;padding:6px 6px 6px 18px;
+    border:1.5px solid var(--line-2);transition:border-color .15s}
+  .search:focus-within{border-color:var(--violet)}
   .search textarea{border:0;box-shadow:none;padding:12px 0;font-size:16px;min-height:48px;max-height:260px;resize:none;background:transparent}
   .search textarea:focus{box-shadow:none}
   .search .primary{flex:none;height:48px;border-radius:13px;padding:0 26px}
@@ -35,12 +35,12 @@
   body:not(.home) .under{justify-content:flex-start}
   .under summary{list-style:none;font-size:13px}
   .under summary::-webkit-details-marker{display:none}
-  .modes{display:flex;justify-content:center;margin:0 auto 14px;background:#fff;border:1.5px solid var(--line-2);
-    border-radius:30px;padding:4px;width:max-content;max-width:100%;box-shadow:0 4px 14px rgba(85,24,145,.06)}
+  .modes{display:flex;justify-content:center;margin:0 auto 14px;background:var(--panel-2);border:0;
+    border-radius:30px;padding:4px;width:max-content;max-width:100%}
   body:not(.home) .modes{margin-left:0}
-  .mode{border:0;border-radius:26px;padding:8px 18px;font-size:13px;background:transparent;color:var(--violet-2)}
-  .mode:hover:not(:disabled){background:var(--panel-2);border:0}
-  .mode.on,.mode.on:hover:not(:disabled){background:linear-gradient(115deg,var(--violet),var(--pink));color:#fff}
+  .mode{border:0;border-radius:26px;padding:8px 18px;font-size:13px;background:transparent;color:var(--dim)}
+  .mode:hover:not(:disabled){background:transparent;border:0;color:var(--text)}
+  .mode.on,.mode.on:hover:not(:disabled){background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(20,17,24,.08)}
   .folder-row{display:flex;justify-content:center;margin-top:12px}
   body:not(.home) .folder-row{justify-content:flex-start}
   .folder-row input{width:100%;max-width:520px;text-align:center;font-size:13px;border-radius:30px}
@@ -93,7 +93,7 @@
   .helper{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
   .helper textarea{font-size:12.5px;margin:8px 0;color:var(--dim)}
   .tab.alert:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--err)}
-  .legal{text-align:center;font-size:11px;font-style:italic;color:#a59db5;margin:40px 0 0}
+  .legal{text-align:center;font-size:11px;color:#b3aebb;margin:48px 0 0}
   @media (max-width:640px){.modes{display:grid;grid-template-columns:1fr 1fr;border-radius:18px;gap:2px}
     .mode{border-radius:14px;padding:9px 6px;font-size:12px;white-space:normal;text-align:left;gap:6px}
     .ico.stack img{width:15px;height:15px}.ico.stack img+img{margin-left:-7px}
@@ -129,17 +129,17 @@
   .lead{text-align:center;color:var(--dim);font-size:13px;margin:12px 0 0;text-wrap:balance}
   body:not(.home) .lead{display:none}
   .sub{color:var(--dim);font-size:13px;margin:0 0 20px}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   input[type=text],input[type=password],input[type=date],select,textarea{background:#fff;border:1.5px solid var(--line-2);
     color:var(--text);border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;outline:none;transition:.15s}
   input:focus,select:focus,textarea:focus{border-color:var(--violet);box-shadow:0 0 0 4px rgba(107,0,189,.12)}
   textarea{width:100%;resize:vertical}
-  button{background:#fff;border:1.5px solid var(--line-2);color:var(--violet-2);
+  button{background:#fff;border:1.5px solid var(--line-2);color:var(--text);
     border-radius:30px;padding:9px 18px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
   button:hover:not(:disabled){border-color:var(--violet);background:var(--panel-2)}
   button:disabled{opacity:.45;cursor:default}
-  .primary{background:var(--violet);border-color:var(--violet);color:#fff;text-transform:uppercase;letter-spacing:.04em;padding:11px 24px}
+  .primary{background:var(--violet);border-color:var(--violet);color:#fff;padding:11px 24px}
   .primary:hover:not(:disabled){background:var(--violet-2);border-color:var(--violet-2)}
   .small{padding:6px 13px;font-size:12px}
   .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
@@ -148,25 +148,74 @@
   kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font:12px ui-monospace,monospace}
   a{color:var(--violet)}
 
-  table{width:100%;border-collapse:separate;border-spacing:0 6px;margin-top:6px}
-  th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
-    color:var(--dim);font-weight:600;padding:0 8px 2px}
-  th:first-child{padding-left:12px}
-  td{padding:7px 8px;vertical-align:middle;background:#fbf8fe}
-  td:first-child{border-radius:12px 0 0 12px;padding-left:12px}
-  td:last-child{border-radius:0 12px 12px 0}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  th{text-align:left;font-size:11px;color:var(--dim);font-weight:500;padding:0 8px 6px}
+  td{padding:8px;vertical-align:middle;border-top:1px solid var(--line)}
   td input[type=text]{width:84px;padding:6px 7px;text-align:center}
-  td.lab input{width:100%;text-align:left}
-  /* реклама: розовая плашка с цветной полосой слева */
-  tr.ad td{background:#f8e9fb}
-  tr.ad td:first-child{box-shadow:inset 4px 0 0 var(--magenta)}
-  tr.ad td.lab input{color:var(--magenta);font-weight:600;border-color:#e7c3ef}
   input[type=checkbox]{accent-color:var(--violet);width:17px;height:17px}
-  .src{font-size:11px;color:var(--dim);white-space:nowrap}
-  .src a{text-decoration:none}
-  .vhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
-  .vtitle{font-weight:700;font-size:16px}
-  .chan{color:var(--dim);font-size:13px}
+  /* ролик: заголовок, строка канала и таблица рекламы, без рамок */
+  .vid{display:grid;grid-template-columns:176px 1fr;gap:12px 18px;align-items:center;padding:20px 0;border-top:1px solid var(--line)}
+  .vid > .ads{grid-column:1/-1;margin-top:4px}
+  .ads tbody.tog td{border-top:1px solid var(--line);padding:2px 0}
+  .vid:first-child{border-top:0}
+  .thumb{position:relative;display:block;align-self:start;border-radius:10px;overflow:hidden;aspect-ratio:16/9;background:var(--panel-2)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .dur{position:absolute;right:6px;bottom:6px;background:rgba(20,17,24,.78);color:#fff;font-size:11px;font-weight:600;
+    padding:1px 6px;border-radius:5px}
+  .vbody{min-width:0}
+  .vhead{margin-bottom:6px}
+  .vtitle{display:block;font-weight:700;font-size:16px;line-height:1.3;color:var(--text);text-decoration:none}
+  .vtitle:hover{color:var(--violet)}
+  .chan{display:flex;gap:10px;align-items:center;color:var(--dim);font-size:13px;margin-top:4px}
+  .chan .cnt{font-size:11.5px;font-weight:600;color:var(--violet);background:#f3e8ff;padding:2px 8px;border-radius:999px}
+  .chan .cnt.none{color:var(--dim);background:var(--panel-2)}
+  @media (max-width:640px){.vid{grid-template-columns:120px 1fr}}
+  .ads td:first-child,.ads th:first-child{width:28px;padding-left:0}
+  .ads td:nth-child(2){width:36px;padding:4px}
+  .ads td:nth-child(3){width:120px}
+  .ads td{padding:5px 8px}
+  .ads td.obj{width:100%}
+  .ads th:nth-child(n+5),.ads td:nth-child(n+5){white-space:nowrap}
+  .ads td.obj input{width:100%;text-align:left;border-color:transparent;background:transparent;font-weight:600;padding:6px 8px;margin-left:-8px}
+  .ads td.obj input:hover{border-color:var(--line-2)}
+  .ads td.obj input:focus{border-color:var(--violet);background:#fff}
+  .ads td.obj input::placeholder{color:var(--dim);font-weight:400}
+  .ads .tc{width:72px;border-color:transparent;background:var(--panel-2)}
+  .ads .tc:focus{background:#fff}
+  .ads .len{color:var(--dim);font-size:13px;width:60px}
+  .ads tbody.rest tr{opacity:.62}
+  .ads tbody.rest tr:hover{opacity:1}
+  .play{display:inline-flex;width:28px;height:28px}
+  .play svg{width:28px;height:28px;fill:#3d3946;transition:fill .15s}
+  .play:hover svg{fill:var(--violet)}
+  .tt{display:inline-block;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap;
+    background:var(--panel-2);color:var(--dim)}
+  .tt.t-pre{background:#eef2ff;color:#3b4fd1} .tt.t-i1{background:#f3e8ff;color:var(--violet)}
+  .tt.t-i2{background:#fbe8f8;color:var(--magenta)}
+  button.link{border:0;background:none;padding:6px 0;color:var(--violet);font-size:13px;font-weight:600}
+  button.link:hover:not(:disabled){background:none;border:0;text-decoration:underline}
+  .note{color:var(--dim);font-size:12.5px;margin:6px 0 10px;max-width:640px}
+  .types{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px 18px}
+  label.typ{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;color:var(--dim);cursor:pointer;line-height:1.45}
+  label.typ input{margin-top:3px;flex:none}
+  label.typ .tt{display:table;margin-bottom:4px}
+  /* итог сохранения: заметный блок с кнопкой Finder */
+  .saved{display:flex;align-items:center;gap:14px;margin:16px 0 0;padding:14px 16px;border-radius:14px;
+    background:#eefaf4;border:1px solid #c9ecdb}
+  .saved .mark{width:32px;height:32px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;
+    font-weight:700;font-size:16px;flex:none}
+  .saved .txt{display:flex;flex-direction:column;flex:1;min-width:0;font-size:14px}
+  .saved .txt span{color:#3d6b57;font-size:13px}
+  .saved.fail{background:#fff1f5;border-color:#f7c2d3}
+  .saved.fail .mark{background:var(--err)}
+  .finder{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid #d4d0da;border-radius:8px;
+    padding:7px 12px;font-size:13px;font-weight:600;color:var(--text);box-shadow:0 1px 1px rgba(0,0,0,.04)}
+  .finder svg{width:18px;height:15px;flex:none}
+  .finder:hover:not(:disabled){background:#f7f6f9;border-color:#c4bfcc}
+  .ckst{font-size:13px;font-weight:600;color:var(--dim)}
+  .ckst.ok{color:var(--ok)} .ckst.bad{color:var(--err)}
+  .errs{margin-top:4px}
+  .errs pre{white-space:pre-wrap;font:12px/1.5 ui-monospace,monospace;color:#a3133f;margin:8px 0 0}
   .tag{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;margin-left:6px;
     background:var(--panel-2);color:var(--violet);border:1px solid var(--line-2)}
 
@@ -183,10 +232,22 @@
     border-radius:10px;padding:12px;margin-top:10px;color:#a3133f;font-size:13.5px}
   .okbox{background:#eefaf5;border:1px solid #bfe8d6;border-radius:10px;padding:12px;margin-top:10px}
   details summary{cursor:pointer;color:var(--violet-2);font-size:13px;font-weight:600}
-  .foot{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.94);
-    backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px;box-shadow:0 -6px 24px rgba(85,24,145,.08)}
+  .foot{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.92);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:12px 16px}
   .foot .inner{max-width:1080px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
   .stat{color:var(--dim);font-size:13px}
+  /* переключатель «превью JPG»: заметный, рядом с кнопкой сохранения */
+  .pswitch{display:inline-flex;align-items:center;gap:9px;padding:7px 14px 7px 8px;border-radius:30px;cursor:pointer;
+    border:1.5px solid var(--line-2);background:#fff;font-size:13px;font-weight:600;color:var(--violet-2);user-select:none;transition:.15s}
+  .pswitch:hover{border-color:var(--violet)}
+  .pswitch input{position:absolute;opacity:0;pointer-events:none}
+  .pswitch .knob{position:relative;width:38px;height:22px;border-radius:11px;background:var(--line-2);transition:.2s;flex:none}
+  .pswitch .knob::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+  .pswitch input:checked + .knob{background:linear-gradient(115deg,var(--violet),var(--pink))}
+  .pswitch input:checked + .knob::after{left:19px}
+  .pswitch:has(input:checked){border-color:var(--violet);background:var(--panel-2)}
+  .pswitch input:focus-visible + .knob{outline:2px solid var(--violet);outline-offset:2px}
   .stat b{color:var(--text);font-weight:600}
   .offline{border-color:#e7c3ef;background:#fdf6ff}
   .offline code{font:12.5px ui-monospace,monospace;background:var(--panel-2);padding:2px 6px;border-radius:5px}
@@ -232,7 +293,7 @@
     <div class="tabs">
       <button class="tab" data-for="startPanel">Старт</button>
       <button class="tab" data-for="setsPanel">Настройки</button>
-      <button class="tab" data-for="ckBox">Куки<span id="ckState"></span></button>
+      <button class="tab" data-for="ckBox">Куки</button>
     </div>
     <div id="startPanel" class="panel card hide">
       <h3 class="st-title">Проверка перед стартом</h3>
@@ -273,7 +334,7 @@
               <option value="480">480p</option>
               <option value="2160">До 4K</option>
             </select>
-            <small>Чем выше, тем дольше скачивание</small>
+            <small>Чем выше качество, тем дольше качается видео</small>
           </label>
         </div>
         <label class="field hide" id="cookieFileRow">Путь к файлу кук
@@ -294,7 +355,7 @@
           </label>
           <label class="field wide">Свои подсказки
             <input id="keywords" type="text" placeholder="вкусвилл, тинькофф, курсы">
-            <small>Слова, по которым кусок ролика тоже считать рекламой. Через запятую</small>
+            <small>Впиши слова через запятую. Фрагмент ролика с ними тоже станет рекламой</small>
           </label>
           <label class="field">Субтитры
             <select id="transcript">
@@ -305,9 +366,24 @@
             <small>По речи блогера видно, где начинается реклама</small>
           </label>
         </div>
-        <div class="field">Что ещё отмечать по SponsorBlock
-          <small>Это база, где зрители сами размечают рекламу и другие куски роликов</small>
+      </section>
+      <section class="grp yt-only">
+        <h3>Какую рекламу отмечать сразу</h3>
+        <p class="note">Программа сама понимает тип по тому, кто говорит. Реклама без галочки здесь всё равно попадёт в список, просто не будет выбрана.</p>
+        <div class="types" id="adTypes">
+          <label class="typ"><input type="checkbox" value="Преролл" checked>
+            <span><b class="tt t-pre">Преролл</b>Он же альтролл. Готовый ролик бренда без слов блогера, 10–30 секунд, обычно в начале выпуска</span></label>
+          <label class="typ"><input type="checkbox" value="Интеграция-1" checked>
+            <span><b class="tt t-i1">Интеграция-1</b>Первый слот. Блогер сам рассказывает о продукте, обычно минуту в первой трети ролика</span></label>
+          <label class="typ"><input type="checkbox" value="Интеграция-2" checked>
+            <span><b class="tt t-i2">Интеграция-2</b>Второй слот, он же мидролл. Ещё один рассказ блогера дальше по выпуску</span></label>
         </div>
+      </section>
+      <section class="grp yt-only">
+        <h3>Отметки зрителей</h3>
+        <p class="note">SponsorBlock это открытая база, где зрители сами отмечают в роликах рекламу, заставки и концовки.
+          Если у ролика такие отметки есть, границы рекламы точнее. Отмеченные ниже виды программа берёт из базы.
+          Всё, кроме рекламы и саморекламы, появится среди фрагментов без рекламы.</p>
         <div class="cats" id="sbCats"></div>
       </section>
       <div class="status" id="envState"></div>
@@ -320,17 +396,15 @@
           <circle cx="40" cy="12" r="6" fill="var(--tint)"/></svg>
         <div>
           <strong>Куки нужны, чтобы скачивать от твоего имени</strong>
-          <p class="hint" style="margin:4px 0 0">YouTube и Instagram* иногда отдают видео только тем, кто вошёл в аккаунт.
+          <p class="hint" style="margin:4px 0 0">YouTube и Instagram* иногда отдают видео только после входа в аккаунт.
             Куки передают программе этот вход, пароль вводить не придётся. Файл хранится только на твоём компьютере.
             Обновляй куки, если увидишь ошибку «not a bot».</p>
         </div>
       </div>
       <ol class="steps">
-        <li>Поставь расширение <b>Get cookies.txt LOCALLY</b>
-          <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noopener">для Chrome, Arc, Яндекс Браузера и Edge</a>
-          или <a href="https://addons.mozilla.org/firefox/addon/get-cookies-txt-locally/" target="_blank" rel="noopener">для Firefox</a>.</li>
+        <li>Поставь расширение <a href="https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc" target="_blank" rel="noopener"><b>Get cookies.txt LOCALLY</b></a> для Chrome.</li>
         <li>Открой <a href="https://www.youtube.com" target="_blank" rel="noopener">youtube.com</a>
-          или <a href="https://www.instagram.com" target="_blank" rel="noopener">instagram.com</a> там, где ты вошёл в аккаунт.
+          или <a href="https://www.instagram.com" target="_blank" rel="noopener">instagram.com</a> в браузере, где открыт твой аккаунт.
           Для VK, TikTok и Rutube куки обычно не нужны.</li>
         <li>Нажми на значок расширения и выбери <b>Copy</b>.</li>
         <li>Вставь куки в поле ниже и сохрани.</li>
@@ -338,7 +412,7 @@
       <textarea id="ckText" rows="4" class="mono" placeholder="Вставь куки сюда (⌘V)"></textarea>
       <div class="row" style="margin-top:10px">
         <button id="ckSave" class="primary">Сохранить куки</button>
-        <span class="stat" id="ckMsg"></span>
+        <span class="ckst" id="ckMsg"></span>
       </div>
     </div>
   </div>
@@ -353,21 +427,22 @@
     <div class="row" style="justify-content:space-between">
       <span class="stat" id="stageTxt"></span><span class="stat mono" id="pctTxt"></span>
     </div>
-    <details><summary>Подробности</summary><pre class="log" id="log"></pre></details>
+    <pre class="log hide" id="log"></pre>
     <div id="jobErr" class="err hide"></div>
   </div>
 
   <div id="videos"></div>
-  <div id="results"></div>
-  <p class="legal">* Instagram принадлежит компании Meta, которая признана экстремистской организацией и запрещена на территории России</p>
+  <div class="results" data-res="yt"></div><div class="results hide" data-res="soc"></div><div class="results hide" data-res="tg"></div><div class="results hide" data-res="find"></div>
+  <p class="legal">* Instagram принадлежит Meta Platforms Inc., деятельность которой признана экстремистской и запрещена в РФ.</p>
 </div>
 
 <div class="foot hide" id="foot">
   <div class="inner">
     <span class="stat" id="selStat"></span>
     <div class="row">
-      <button id="allAds" class="small">Отметить всю рекламу</button>
-      <button id="clearAll" class="small">Снять отметки</button>
+      <label class="pswitch" title="Обложка каждого ролика в JPG, папка «Превью» в папке блогера">
+        <input type="checkbox" id="withPrev"><span class="knob"></span>Превью JPG
+      </label>
       <button id="grab" class="primary">Сохранить в mp4</button>
     </div>
   </div>
@@ -476,7 +551,7 @@ api("/api/env").then(d=>{
   if(d.cookieFile && $("#cookies").value === "none" && !localStorage.getItem("ytads:cfg")) $("#cookies").value = "file";
   if(!d.cookieFile && $("#cookies").value === "file" && !$("#cookieFile").value) $("#cookies").value = "none";
   fileRow();
-  $("#ckState").textContent = d.cookieFile ? "" : " · не добавлены";
+  if(!d.cookieFile) ckStatus(false, "Не добавлены");
   renderStatus();
   loadStart(!startLoaded); startLoaded = true;
 }).catch(()=>{ restore(); if(!LOCAL) $("#offline").classList.remove("hide"); });
@@ -617,17 +692,24 @@ $("#startRecheck").onclick = () => loadStart();
 $("#ckSave").onclick = () => {
   const text = $("#ckText").value;
   if(!text.trim()) return;
-  $("#ckMsg").textContent = "сохраняю…";
+  ckStatus(null, "Сохраняю…");
   api("/api/cookies", {text}).then(d=>{
     $("#ckText").value = "";
     $("#cookies").value = "file"; $("#cookieFile").value = d.file; $("#cookies").onchange();
-    $("#ckState").textContent = " · обновлены";
-    $("#ckMsg").innerHTML = `<b>сохранено: ${(d.sites||["YouTube"]).join(", ")}, ${d.count} кук</b>. Можно продолжать`;
-  }).catch(e=>{ $("#ckMsg").textContent = e.message || e; });
+    ckStatus(true, "Обновлено");
+  }).catch(e=>{ ckStatus(false, "Не обновлено", e.message || e); });
 };
+/* статус кук рядом с кнопкой: зелёный, если всё хорошо, красный, если нет */
+function ckStatus(ok, text, why){
+  const m = $("#ckMsg");
+  m.className = "ckst" + (ok === true ? " ok" : ok === false ? " bad" : "");
+  m.textContent = text;
+  m.title = why || "";
+  document.querySelector('.tab[data-for="ckBox"]').classList.toggle("alert", ok === false);
+}
 function askCookies(){
   openPanel("ckBox", true);
-  $("#ckState").textContent = " · протухли, нужны новые";
+  ckStatus(false, "Устарели, вставь новые");
   $("#ckBox").scrollIntoView({behavior:"smooth", block:"center"});
 }
 const isBot = t => /not a bot|sign in to confirm/i.test(t||"");
@@ -637,7 +719,7 @@ const isBot = t => /not a bot|sign in to confirm/i.test(t||"");
 let appMode = "yt";
 const MODES = {
   yt: {ph: "Вставь ссылку на ролик YouTube", btn: "Найти",
-       lead: "Найду рекламу по описанию и субтитрам и сохраню нужные куски в mp4. Ссылок можно несколько, каждую с новой строки"},
+       lead: "Найду рекламу по описанию и субтитрам и сохраню нужные фрагменты в mp4. Ссылок можно несколько, каждую с новой строки"},
   soc: {ph: "Вставь ссылку на видео из VK, TikTok, Instagram* или Rutube", btn: "Скачать",
         lead: "Скачаю видео целиком и разложу по папкам с именами блогеров",
         folder: "Своё имя папки, если нужно"},
@@ -647,8 +729,28 @@ const MODES = {
   find: {ph: "Впиши блогера: имя, @handle или ссылку на канал", btn: "Искать",
          lead: "Покажу выпуски, где в описании есть эти слова, и объясню, почему выбрал каждый. Блогеров можно вписать несколько, каждого с новой строки"},
 };
+/* у каждой плашки своё: ссылки, папка, результаты. При переключении прячем и возвращаем */
+const modeState = {};
+const JOB_MODE = {scan:"yt", grab:"yt", social:"soc", telegram:"tg", find:"find"};
+// куда класть результаты: при запуске это текущая плашка, по готовности плашка задачи
+const resBox = m => document.querySelector(`.results[data-res="${m || JOB_MODE[mode]}"]`);
 function setMode(m){
-  appMode = MODES[m] ? m : "yt";
+  const prev = appMode, next = MODES[m] ? m : "yt";
+  if(prev !== next){
+    modeState[prev] = {urls: $("#urls").value, folder: $("#folder").value};
+    const st = modeState[next] || {};
+    $("#urls").value = st.urls || "";
+    $("#folder").value = st.folder || "";
+  }
+  appMode = next;
+  document.querySelectorAll(".results").forEach(b => b.classList.toggle("hide", b.dataset.res !== appMode));
+  $("#scanStat").classList.toggle("hide", appMode !== "yt");
+  // прогресс показываем только у той плашки, где запускали задачу
+  const jobHere = JOB_MODE[mode] === appMode;
+  $("#progWrap").classList.toggle("hide", !jobHere || (!jobId && !$("#log").textContent));
+  const busy = !$("#progWrap").classList.contains("hide") || resBox(appMode).childNodes.length
+    || (appMode === "yt" && videos.length);
+  document.body.classList.toggle("home", !busy);
   document.querySelectorAll(".mode").forEach(b => b.classList.toggle("on", b.dataset.mode === appMode));
   $("#urls").placeholder = MODES[appMode].ph;
   $("#scan").textContent = MODES[appMode].btn;
@@ -671,14 +773,14 @@ document.querySelectorAll(".mode").forEach(b => b.onclick = () => setMode(b.data
 try{ setMode(localStorage.getItem("ytads:mode") || "yt"); }catch(e){ setMode("yt"); }
 
 function socialStart(urls){
-  $("#results").innerHTML = "";
+  resBox(appMode).innerHTML = "";
   startJob("social", "/api/social", Object.assign(access(), {urls, folder: $("#folder").value.trim()}),
     `Скачиваю видео: ${urls.length}`);
 }
 function onSocialDone(j){
   const res = j.results || [];
   const ok = res.filter(r=>r.ok), bad = res.filter(r=>!r.ok);
-  const box = $("#results");
+  const box = resBox();
   box.innerHTML = `<div class="card"><strong>Скачано: ${ok.length} из ${res.length}</strong>`
     + (ok.length ? `<table><thead><tr><th>Видео</th><th>Формат</th><th>Длина</th><th></th></tr></thead><tbody>`
         + ok.map((r,i)=>`<tr><td><span class="tag" style="margin:0 6px 0 0">${esc(r.platform)}</span><b>${esc(r.blogger)}</b>
@@ -696,7 +798,7 @@ function onSocialDone(j){
 }
 
 function tgStart(urls){
-  $("#results").innerHTML = "";
+  resBox(appMode).innerHTML = "";
   startJob("telegram", "/api/telegram", {urls, folder: $("#folder").value.trim()},
     `Сохраняю посты: ${urls.length}`);
 }
@@ -704,7 +806,7 @@ function onTgDone(j){
   const res = j.results || [];
   const ok = res.filter(r=>r.ok), bad = res.filter(r=>!r.ok);
   const img = f => (base||"") + "/api/image?path=" + encodeURIComponent(f);
-  $("#results").innerHTML = `<div class="card"><strong>Сохранено: ${ok.length} из ${res.length}</strong>`
+  resBox().innerHTML = `<div class="card"><strong>Сохранено: ${ok.length} из ${res.length}</strong>`
     + (ok.length ? `<div class="shots">` + ok.map((r,i)=>`<figure class="shot">
         <a href="${esc(img(r.file))}" target="_blank" rel="noopener"><img src="${esc(img(r.file))}" alt=""></a>
         <figcaption><div><b>${esc(r.channel)}</b>${r.date?" · "+esc(r.date.slice(0,10)):""}</div>
@@ -714,7 +816,7 @@ function onTgDone(j){
     + (bad.length ? `<div class="err">Не получилось:\n` + bad.map(r=>`${r.url}\n${r.error}`).join("\n\n") + `</div>` : "")
     + (j.manifest ? `<div class="okbox">Список всех сохранённых постов: <span class="mono">${esc(j.manifest)}</span></div>` : "")
     + `</div>`;
-  $("#results").querySelectorAll("[data-rev]").forEach(b => b.onclick = () => api("/api/reveal", {path: ok[+b.dataset.rev].file}).catch(()=>{}));
+  resBox().querySelectorAll("[data-rev]").forEach(b => b.onclick = () => api("/api/reveal", {path: ok[+b.dataset.rev].file}).catch(()=>{}));
 }
 
 $("#scan").onclick = () => {
@@ -723,18 +825,18 @@ $("#scan").onclick = () => {
   if(appMode === "soc") return socialStart(urls);
   if(appMode === "tg") return tgStart(urls);
   if(appMode === "find") return findStart(urls);
-  videos = []; $("#videos").innerHTML = ""; $("#results").innerHTML = "";
+  videos = []; $("#videos").innerHTML = ""; resBox(appMode).innerHTML = "";
   $("#foot").classList.add("hide");
   startJob("scan", "/api/scan", Object.assign(access(), {
     urls, keywords: $("#keywords").value, transcript: $("#transcript").value, ai: $("#ai").value,
     sbCats: [...$("#sbCats").querySelectorAll("input:checked")].map(i=>i.value)
-  }), `Читаю ${urls.length} ${urls.length===1?"ролик":"ролика"}`);
+  }), `Ищу рекламу в ${urls.length} ${plural(urls.length,"ролике","роликах","роликах")}`);
 };
 
 function findStart(bloggers){
   const keywords = $("#fkw").value.trim();
   if(!keywords){ $("#fkw").focus(); return; }
-  $("#results").innerHTML = "";
+  resBox(appMode).innerHTML = "";
   try{ localStorage.setItem("ytads:fkw", keywords); }catch(e){}
   startJob("find", "/api/find", {bloggers, keywords, since: $("#fsince").value},
     `Ищу у блогеров: ${bloggers.length}`);
@@ -747,7 +849,7 @@ function onFindDone(j){
   const line = r => `${r.blogger} | ${r.title}`;
   const chans = (j.channels||[]).map(c=>`<b>${esc(c.query)}</b> → канал «${esc(c.title)}», проверено ${c.seen}, найдено ${c.hits}`
     + (c.others.length ? `<div class="hint">Не тот канал? Вставь ссылку на него или @handle. Похожие: ${esc(c.others.join(", "))}</div>` : "")).join("<br>");
-  $("#results").innerHTML = `<div class="card"><strong>Найдено выпусков: ${res.length}</strong>`
+  resBox().innerHTML = `<div class="card"><strong>Найдено выпусков: ${res.length}</strong>`
     + (res.length > ads.length ? ` <span class="hint">· в ${res.length-ads.length} из них слово просто упомянуто, без признаков рекламы</span>` : "")
     + `<div class="hint" style="margin:8px 0 0">${chans}</div>`
     + (res.length ? `<div class="row" style="margin-top:10px"><button class="small" id="fCopy">Скопировать таблицу</button>
@@ -792,48 +894,65 @@ $("#urls").addEventListener("input", grow);
 $("#urls").addEventListener("keydown", e => { if(e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("#scan").click(); });
 
 /* ---------- отрисовка найденного ---------- */
+/* что рекламируют: бренд, а без него подпись без служебных хвостов */
+function objOf(it){
+  if(it.brand) return it.brand;
+  const l = String(it.label||"").replace(/\s*\((sponsorblock)\)/ig, "").trim();
+  return /^(реклама|самопромо|фрагмент)$/i.test(l) ? (it.type === "Самореклама" ? "Канал о себе" : "") : l;
+}
+const TYPE_CLASS = {"Преролл":"t-pre", "Интеграция-1":"t-i1", "Интеграция-2":"t-i2"};
+const PLAY = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12"/><path d="M9.6 7.4v9.2l7.4-4.6z" fill="#fff"/></svg>`;
+function typesOn(){ return [...document.querySelectorAll("#adTypes input:checked")].map(i=>i.value); }
 function renderVideos(){
   const box = $("#videos"); box.innerHTML = "";
+  const on = typesOn();
   videos.forEach((v, vi)=>{
-    const card = document.createElement("div"); card.className = "card";
-    const ads = v.items.filter(i=>i.ad).length;
+    const card = document.createElement("div"); card.className = "vid";
+    const ads = v.items.filter(i=>i.ad), rest = v.items.filter(i=>!i.ad);
     card.innerHTML =
-      `<div class="vhead">
-         <div><div class="vtitle">${esc(v.title)}${ads?`<span class="tag">реклама: ${ads}</span>`:""}</div>
-              <div class="chan">${esc(v.channel)} · ${hms(v.duration)}</div></div>
-         <div class="hint">Главы: ${v.hasChapters?"есть":"нет"} · SponsorBlock: ${v.sbCount} · Субтитры: ${v.subs?esc(v.subs):"нет"} · Кусков: ${v.items.length}</div>
-       </div>` +
-      ((v.advertisers||[]).length ? `<div class="hint" style="margin-top:6px">В описании реклама: ${adChips(v.advertisers)}</div>` : "") +
-      ((v.missing||[]).length ? `<div class="hint" style="margin-top:4px">Не нашёл в ролике, где звучит ${esc(v.missing.join(", "))}. Найди это место сам и поправь время в любой строке.</div>` : "") +
+      `<a class="thumb" href="${esc(v.url)}" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/${esc(v.id)}/mqdefault.jpg" alt="" loading="lazy">
+         <span class="dur mono">${hms(v.duration)}</span></a>
+       <div class="vbody"><div class="vhead"><a class="vtitle" href="${esc(v.url)}" target="_blank" rel="noopener">${esc(v.title)}</a>
+         <div class="chan"><span>${esc(v.channel)}</span><span class="cnt${ads.length?"":" none"}">${ads.length ? `${ads.length} ${plural(ads.length,"реклама","рекламы","реклам")}` : "Рекламы нет"}</span></div></div>` +
+      ((v.missing||[]).length ? `<p class="note">В описании есть ${esc(v.missing.join(", "))}, но в ролике это место не нашлось. Поправь время в любой строке.</p>` : "") +
+      (v.items.length ? "" : `<p class="note">В ролике нет глав, таймкодов и отметок зрителей${v.subs?". В субтитрах реклама тоже не звучит":""}.</p>`) + `</div>` +
       (v.items.length
-        ? `<table><thead><tr><th style="width:26px"></th><th>Начало</th><th>Конец</th><th>Длина</th><th>Подпись</th><th>Источник</th></tr></thead><tbody></tbody></table>
-           <div class="row" style="margin-top:8px">
-             <button class="small" data-pick="${vi}">Только реклама</button>
-             <button class="small" data-all="${vi}">Все</button>
-             <button class="small" data-none="${vi}">Снять</button>
-           </div>`
-        : `<p class="hint" style="margin:10px 0 0">Рекламу не нашёл. В ролике нет глав, таймкодов в описании и разметки SponsorBlock${v.subs?", а в субтитрах рекламы не видно":""}.</p>`);
+        ? `<table class="ads"><thead${ads.length?"":` class="hide"`}><tr><th></th><th></th><th>Тип</th><th>Что рекламируют</th><th>Начало</th><th>Конец</th><th>Длина</th></tr></thead>
+             <tbody class="main"></tbody>` +
+          (rest.length ? `<tbody class="tog"><tr><td colspan="7"><button class="link more"></button></td></tr></tbody>` : "") +
+          `<tbody class="rest hide"></tbody></table>`
+        : "");
     box.appendChild(card);
     if(!v.items.length) return;
-    const tb = card.querySelector("tbody");
     v.items.forEach((it, ii)=>{
-      if(it.pick === undefined) it.pick = it.ad;
+      if(it.pick === undefined) it.pick = it.ad && (!it.type || on.includes(it.type));
       const tr = document.createElement("tr");
       if(it.ad) tr.className = "ad";
+      const ob = objOf(it);
       tr.innerHTML =
         `<td><input type="checkbox" ${it.pick?"checked":""} data-v="${vi}" data-i="${ii}" data-k="pick"></td>`+
-        `<td><input type="text" class="mono" value="${hms(it.start)}" data-v="${vi}" data-i="${ii}" data-k="start"></td>`+
-        `<td><input type="text" class="mono" value="${hms(it.end)}" data-v="${vi}" data-i="${ii}" data-k="end"></td>`+
-        `<td class="mono hint">${hms(it.end-it.start)}</td>`+
-        `<td class="lab"><input type="text" value="${esc(it.label)}" title="${esc(it.evidence||"")}" data-v="${vi}" data-i="${ii}" data-k="label"></td>`+
-        `<td class="src">${esc((it.src||[]).join(", "))} <a href="https://youtu.be/${esc(v.id)}?t=${Math.floor(it.start)}" target="_blank" rel="noopener" title="открыть ролик с этого места">▶</a></td>`;
-      tb.appendChild(tr);
+        `<td><a class="play" href="https://youtu.be/${esc(v.id)}?t=${Math.floor(it.start)}" target="_blank" rel="noopener" title="Открыть ролик с этого места">${PLAY}</a></td>`+
+        `<td>${it.type ? `<span class="tt ${TYPE_CLASS[it.type]||""}">${esc(it.type)}</span>` : `<span class="tt t-none">${it.ad?"Реклама":"Фрагмент"}</span>`}</td>`+
+        `<td class="obj"><input type="text" value="${esc(ob)}" placeholder="${it.ad?"Впиши бренд":"Без подписи"}" title="${esc(it.evidence||"")}" data-v="${vi}" data-i="${ii}" data-k="obj"></td>`+
+        `<td><input type="text" class="mono tc" value="${hms(it.start)}" data-v="${vi}" data-i="${ii}" data-k="start"></td>`+
+        `<td><input type="text" class="mono tc" value="${hms(it.end)}" data-v="${vi}" data-i="${ii}" data-k="end"></td>`+
+        `<td class="mono len">${hms(it.end-it.start)}</td>`;
+      card.querySelector(it.ad ? "tbody.main" : "tbody.rest").appendChild(tr);
     });
+    // кнопка стоит над скрытыми строками: раскрыл и свернул в одном месте, без прокрутки
+    const more = card.querySelector(".more");
+    const showRest = () => {
+      const n = `${rest.length} ${plural(rest.length,"фрагмент","фрагмента","фрагментов")} без рекламы`;
+      more.textContent = v.showRest ? `Скрыть ${n}` : `Ещё ${n}`;
+      card.querySelector("tbody.rest").classList.toggle("hide", !v.showRest);
+      if(!ads.length) card.querySelector("thead").classList.toggle("hide", !v.showRest);
+    };
+    if(more){ showRest(); more.onclick = () => { v.showRest = !v.showRest; showRest(); }; }
     card.querySelectorAll("input").forEach(inp=>{
       inp.onchange = () => {
         const it = videos[+inp.dataset.v].items[+inp.dataset.i], k = inp.dataset.k;
         if(k === "pick"){ it.pick = inp.checked; }
-        else if(k === "label"){ it.label = inp.value; }
+        else if(k === "obj"){ it.brand = inp.value.trim(); it.label = it.brand || it.label; }
         else {
           const t = parseTime(inp.value);
           if(t === null){ renderVideos(); return; }
@@ -845,12 +964,19 @@ function renderVideos(){
         updateFoot();
       };
     });
-    card.querySelector("[data-pick]").onclick = () => { v.items.forEach(i=>i.pick = i.ad); renderVideos(); };
-    card.querySelector("[data-all]").onclick  = () => { v.items.forEach(i=>i.pick = true); renderVideos(); };
-    card.querySelector("[data-none]").onclick = () => { v.items.forEach(i=>i.pick = false); renderVideos(); };
   });
   updateFoot();
 }
+/* типы рекламы, которые отмечать сразу: помним между запусками */
+try{
+  const saved = JSON.parse(localStorage.getItem("ytads:types") || "null");
+  if(saved) document.querySelectorAll("#adTypes input").forEach(i => i.checked = saved.includes(i.value));
+}catch(e){}
+document.querySelectorAll("#adTypes input").forEach(i => i.onchange = () => {
+  try{ localStorage.setItem("ytads:types", JSON.stringify(typesOn())); }catch(e){}
+  videos.forEach(v=>v.items.forEach(it=>{ if(it.ad && it.type === i.value) it.pick = i.checked; }));
+  renderVideos();
+});
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 
 function picked(){
@@ -859,25 +985,31 @@ function picked(){
     url:v.url, id:v.id, title:v.title, channel:v.channel}, i)); }));
   return out;
 }
+/* переключатель превью помним между запусками */
+try{ $("#withPrev").checked = localStorage.getItem("ytads:prev") === "1"; }catch(e){}
+$("#withPrev").onchange = () => {
+  try{ localStorage.setItem("ytads:prev", $("#withPrev").checked ? "1" : "0"); }catch(e){}
+  updateFoot();
+};
 function updateFoot(){
   const p = picked();
   const total = p.reduce((s,i)=>s+(i.end-i.start),0);
   $("#foot").classList.toggle("hide", !videos.length);
   $("#selStat").innerHTML = p.length
-    ? `Отмечено <b>${p.length}</b> ${p.length===1?"фрагмент":"фрагментов"}, суммарно <b>${hms(total)}</b>`
-    : "Ничего не отмечено";
+    ? `Выбрано <b>${p.length} ${plural(p.length,"фрагмент","фрагмента","фрагментов")}</b> на <b>${hms(total)}</b>`
+    : "Ничего не выбрано";
   $("#grab").disabled = !p.length;
+  if(!jobId) $("#grab").textContent = $("#withPrev").checked ? "Сохранить mp4 и превью" : "Сохранить в mp4";
 }
-$("#allAds").onclick   = () => { videos.forEach(v=>v.items.forEach(i=>i.pick = i.ad)); renderVideos(); };
-$("#clearAll").onclick = () => { videos.forEach(v=>v.items.forEach(i=>i.pick = false)); renderVideos(); };
 
 /* ---------- выдёргивание ---------- */
 $("#grab").onclick = () => {
   const items = picked();
   if(!items.length) return;
-  $("#results").innerHTML = "";
-  startJob("grab", "/api/grab", Object.assign(access(), {items}),
-           `Выдёргиваю ${items.length} ${items.length===1?"фрагмент":"фрагментов"}`);
+  resBox(appMode).innerHTML = "";
+  const wp = $("#withPrev").checked;
+  startJob("grab", "/api/grab", Object.assign(access(), {items, previews: wp}),
+           `Сохраняю ${items.length} ${plural(items.length,"фрагмент","фрагмента","фрагментов")}${wp ? " и превью" : ""}`);
 };
 
 /* ---------- задачи ---------- */
@@ -905,13 +1037,10 @@ async function checkJob(){
   if(!jobId) return;
   let j;
   try{ j = await api("/api/job/"+jobId); }catch(e){ return; }
-  // внутри фрагмента: сколько скачано, скорость и сколько осталось
-  const sub = j.state === "running" && j.sub
-    ? [j.sub.pct + "%", j.sub.speed, j.sub.eta && "осталось ~" + j.sub.eta].filter(Boolean).join(" · ") : "";
-  $("#stageTxt").textContent = (j.stage || "") + (sub ? " · " + sub : "");
+  const stage = (j.stage || "").replace(/^./, c => c.toUpperCase());
+  $("#stageTxt").textContent = stage;
   $("#pctTxt").textContent = Math.round(j.pct||0) + "%";
-  if(j.state === "running") $("#selStat").innerHTML = `<b>${esc(j.stage||"работаю")}</b>`
-    + (sub ? ` · ${esc(sub)}` : ` · ${Math.round(j.pct||0)}%`);
+  if(j.state === "running") $("#selStat").innerHTML = `<b>${esc(stage||"Работаю")}</b>&nbsp;&nbsp;${Math.round(j.pct||0)}%`;
   $("#bar").firstElementChild.style.width = (j.pct||0) + "%";
   const log = $("#log");
   log.textContent = (j.log||[]).slice(-60).join("\n");
@@ -920,6 +1049,7 @@ async function checkJob(){
     stopPoll(); $("#bar").className = "bar done";
     if(mode === "scan") onScanDone(j); else if(mode === "social") onSocialDone(j);
     else if(mode === "telegram") onTgDone(j); else if(mode === "find") onFindDone(j); else onGrabDone(j);
+    if($("#jobErr").classList.contains("hide")){ $("#progWrap").classList.add("hide"); $("#log").textContent = ""; }
   }else if(j.state === "error"){
     failJob(j.error || "неизвестная ошибка");
     if(mode === "grab" && j.results) onGrabDone(j);
@@ -929,10 +1059,6 @@ async function checkJob(){
 }
 function onScanDone(j){
   videos = j.videos || [];
-  const found = videos.reduce((s,v)=>s+v.items.length,0);
-  const ads = videos.reduce((s,v)=>s+v.items.filter(i=>i.ad).length,0);
-  $("#scanStat").textContent =
-    `${videos.length} роликов, отрезков ${found}, похоже на рекламу ${ads}`;
   renderVideos();
   if((j.errors||[]).some(e=>isBot(e.error))) setTimeout(askCookies, 300);
   if((j.errors||[]).length){
@@ -940,26 +1066,35 @@ function onScanDone(j){
     $("#jobErr").classList.remove("hide");
   }
 }
+const FOLDER = `<svg viewBox="0 0 20 16" aria-hidden="true"><path d="M1 3.2C1 2 1.9 1 3.1 1h4.3l2 2h7.5C18.1 3 19 4 19 5.2v7.6c0 1.2-.9 2.2-2.1 2.2H3.1C1.9 15 1 14 1 12.8z" fill="#5fb3f5"/><path d="M1 5.5h18v7.3c0 1.2-.9 2.2-2.1 2.2H3.1C1.9 15 1 14 1 12.8z" fill="#8ccbfa"/></svg>`;
 function onGrabDone(j){
   const res = j.results || [];
   const ok = res.filter(r=>r.ok), bad = res.filter(r=>!r.ok);
-  const box = $("#results");
-  box.innerHTML = `<div class="card"><strong>Готово: ${ok.length} из ${res.length}</strong>`
-    + (ok.length ? `<table><thead><tr><th>Фрагмент</th><th>Длина</th><th>Файл</th></tr></thead><tbody>`
-        + ok.map(r=>`<tr><td>${esc(r.title)} · ${hms(r.start)}–${hms(r.end)}<div class="hint">${esc(r.label)}</div></td>`
-          + `<td class="mono">${hms(r.seconds)}</td>`
-          + `<td class="hint mono" style="word-break:break-all">${esc(r.file)}</td></tr>`).join("")
-        + `</tbody></table>` : "")
-    + (bad.length ? `<div class="err">Не получилось:\n` + bad.map(r=>`${hms(r.start)}–${hms(r.end)} ${r.label||""}: ${r.error}`).join("\n") + `</div>` : "")
-    + (j.manifest ? `<div class="okbox"><div>Манифест дописан: <span class="mono">${esc(j.manifest)}</span></div>
-         <div class="row" style="margin-top:8px"><button id="revCsv" class="small">Показать в Finder</button>
-         <button id="revOne" class="small">Открыть папку с фрагментами</button></div></div>` : "")
-    + `</div>`;
-  box.scrollIntoView({behavior:"smooth", block:"start"});
-  if(j.manifest){
-    $("#revCsv").onclick = () => api("/api/reveal", {path:j.manifest}).catch(()=>{});
-    if(ok[0]) $("#revOne").onclick = () => api("/api/reveal", {path:ok[0].file}).catch(()=>{});
-  }
+  const prevOk = (j.previews||[]).filter(r=>r.ok), prevBad = (j.previews||[]).filter(r=>!r.ok);
+  const first = (ok[0] || prevOk[0] || {}).file;
+  const dirOf = f => f.replace(/\/Превью\/[^/]+$/, "").replace(/\/[^/]+$/, "");
+  const dirs = [...new Set(ok.concat(prevOk).map(r => dirOf(r.file)))];
+  // один блогер: показываем его файл, несколько: открываем общую папку «Рекламные фрагменты»
+  const root = dirs.length > 1 ? dirs[0].replace(/\/[^/]+$/, "") : "";
+  const folder = root ? root.split("/").pop() : first ? dirs[0].split("/").pop() : "";
+  const what = [ok.length && `${ok.length} ${plural(ok.length,"фрагмент","фрагмента","фрагментов")}`,
+                prevOk.length && `${prevOk.length} превью`].filter(Boolean).join(" и ");
+  const errs = bad.map(r=>`${hms(r.start)}–${hms(r.end)} ${r.label||""}. ${r.error}`)
+    .concat(prevBad.map(r=>`Превью «${r.title||""}». ${r.error}`));
+  const box = resBox();
+  box.innerHTML = `<div class="saved${first ? "" : " fail"}">
+      <span class="mark">${first ? "✓" : "!"}</span>
+      <div class="txt"><b>${first ? "Сохранено" : "Ничего не сохранилось"}</b>
+        ${first ? `<span>${what} в папке «${esc(folder)}»</span>` : ""}</div>
+      ${first ? `<button class="finder" id="revOne">${FOLDER}Показать в Finder</button>` : ""}
+    </div>`
+    + (errs.length ? `<details class="errs"><summary>Что не сохранилось</summary><pre>${esc(errs.join("\n"))}</pre></details>` : "");
+  if(first) $("#revOne").onclick = () => api("/api/reveal", root ? {path:root, open:true} : {path:first}).catch(()=>{});
+  box.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+function plural(n, one, few, many){
+  const a = n % 10, b = n % 100;
+  return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many;
 }
 function failJob(msg){
   stopPoll(); $("#bar").className = "bar err";
@@ -987,6 +1122,7 @@ function stopPoll(){
     $("#progWrap").classList.remove("hide");
     $("#progTitle").textContent = "Задача продолжается после перезагрузки страницы";
     $("#scan").disabled = true;
+    setMode(JOB_MODE[mode] || "yt");
     poll = setInterval(checkJob, 800);
   }).catch(()=>{});
 })();
