@@ -1876,8 +1876,9 @@ class Handler(BaseHTTPRequestHandler):
                                     "proxy": detect_proxy(), "arc": arc.exists(),
                                     "cookieFile": detect_cookie_file(),
                                     "sbLabels": SB_LABELS})
-        if re.fullmatch(r"/icons/[a-z]+\.png", path) and (ROOT / path.lstrip("/")).exists():
-            return self._send(200, (ROOT / path.lstrip("/")).read_bytes(), "image/png")
+        if re.fullmatch(r"/icons/[a-z0-9-]+\.(png|svg)", path) and (ROOT / path.lstrip("/")).exists():
+            ctype = "image/svg+xml" if path.endswith(".svg") else "image/png"
+            return self._send(200, (ROOT / path.lstrip("/")).read_bytes(), ctype)
         if path == "/api/image":
             # превью снимков постов: только jpg из папки Telegram
             q = urllib.parse.parse_qs(self.path.partition("?")[2])
